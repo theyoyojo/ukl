@@ -174,29 +174,117 @@ out:
 // 	return 0;
 // }
 
-int ukl_set_tid_address(int * tidptr){
-	extern int __ukl_set_tid_address(int * ptr);
-	return __ukl_set_tid_address(tidptr);
+pid_t ukl_set_tid_address(int * tidptr){
+	current->clear_child_tid = tidptr;
+
+	return task_pid_vnr(current);
 }
 
 int ukl_set_robust_list(struct robust_list_head * head, size_t len){
-	extern int __ukl_set_robust_list(struct robust_list_head * head, size_t len);
-	return __ukl_set_robust_list(head, len);
+	if (!futex_cmpxchg_enabled)
+		return -ENOSYS;
+	/*
+	 * The kernel knows only one size for now:
+	 */
+	if (unlikely(len != sizeof(*head)))
+		return -EINVAL;
+
+	current->robust_list = head;
+
+	return 0;
 }
 
-int ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigsetsize){
-	extern int __ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigsetsize);
-	return __ukl_rt_sigprocmask(how, nset, oset, sigsetsize);
+int ukl_rt_sigaction(int sig, const struct sigaction * act,	struct sigaction * oact, size_t sigsetsize){
+	struct k_sigaction new_sa, old_sa;
+	int ret;
+
+	/* XXX: Don't preclude handling different sized sigset_t's.  */
+	if (sigsetsize != sizeof(sigset_t))
+		return -EINVAL;
+
+	if (act && copy_from_user(&new_sa.sa, act, sizeof(new_sa.sa)))
+		return -EFAULT;
+
+	ret = do_sigaction(sig, act ? &new_sa : NULL, oact ? &old_sa : NULL);
+	if (ret)
+		return ret;
+
+	if (oact && copy_to_user(oact, &old_sa.sa, sizeof(old_sa.sa)))
+		return -EFAULT;
+
+	return 0;
 }
 
-int ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize){
-	extern int __ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize);
-	return __ukl_rt_sigaction(sig, act, oact, sigsetsize);
+int ukl_rt_sigprocmask(int how, sigset_t * nset, sigset_t * oset, size_t sigsetsize){
+	sigset_t old_set, new_set;
+	int error;
+
+	/* XXX: Don't preclude handling different sized sigset_t's.  */
+	if (sigsetsize != sizeof(sigset_t))
+		return -EINVAL;
+
+	old_set = current->blocked;
+
+	if (nset) {
+		if (copy_from_user(&new_set, nset, sizeof(sigset_t)))
+			return -EFAULT;
+		sigdelsetmask(&new_set, sigmask(SIGKILL)|sigmask(SIGSTOP));
+
+		error = sigprocmask(how, &new_set, NULL);
+		if (error)
+			return error;
+	}
+
+	if (oset) {
+		if (copy_to_user(oset, &old_set, sizeof(sigset_t)))
+			return -EFAULT;
+	}
+
+	return 0;
 }
 
-int ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim, struct rlimit64 * old_rlim){
-	extern int __ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim,	struct rlimit64 * old_rlim);
-	return __ukl_prlimit64(pid, resource, new_rlim,	old_rlim);
+int ukl_prlimit64(pid_t pid, unsigned int resource,	const struct rlimit64 * new_rlim, struct rlimit64 * old_rlim){
+	struct rlimit64 old64, new64;
+	struct rlimit old, new;
+	struct task_struct *tsk;
+	unsigned int checkflags = 0;
+	int ret;
+
+	if (old_rlim)
+		checkflags |= LSM_PRLIMIT_READ;
+
+	if (new_rlim) {
+		if (copy_from_user(&new64, new_rlim, sizeof(new64)))
+			return -EFAULT;
+		rlim64_to_rlim(&new64, &new);
+		checkflags |= LSM_PRLIMIT_WRITE;
+	}
+
+	rcu_read_lock();
+	tsk = pid ? find_task_by_vpid(pid) : current;
+	if (!tsk) {
+		rcu_read_unlock();
+		return -ESRCH;
+	}
+	ret = check_prlimit_permission(tsk, checkflags);
+	if (ret) {
+		rcu_read_unlock();
+		return ret;
+	}
+	get_task_struct(tsk);
+	rcu_read_unlock();
+
+	ret = do_prlimit(tsk, resource, new_rlim ? &new : NULL,
+			old_rlim ? &old : NULL);
+
+	if (!ret && old_rlim) {
+		rlim_to_rlim64(&old, &old64);
+		if (copy_to_user(old_rlim, &old64, sizeof(old64)))
+			ret = -EFAULT;
+	}
+
+	put_task_struct(tsk);
+	return ret;
 }
 
 
@@ -220,23 +308,11 @@ int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 
 
 long ukl_clone(unsigned long clone_flags, unsigned long newsp, int * parent_tidptr, unsigned long tls, int * child_tidptr){
-	long ret;
-	ret = _do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr, tls);
-	schedule();
-	return ret;
+	return _do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr, tls);
 }
 
 int ukl_munmap(unsigned long addr, size_t len){
 	return 0;
-}
-
-void ukl_exit(int error_code){
-	// extern void __ukl_exit(int error_code);
-	// __ukl_exit(error_code);
-	while(1){
-      	current->state = TASK_INTERRUPTIBLE;
-        schedule();
-        }
 }
 
 // int ukl_accept4(int fd, struct sockaddr __user * upeer_sockaddr, int __user * upeer_addrlen, int flags);
@@ -263,8 +339,3 @@ void ukl_exit(int error_code){
 // 	ret = do_adjtimex(&txc);
 // 	return copy_to_user(txc_p, &txc, sizeof(struct timex)) ? -EFAULT : ret;
 // }
-
-long ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3){
-	extern long __ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3);
-	return __ukl_futex(uaddr, op, val, utime, uaddr2, val3);
-}
