@@ -141,6 +141,12 @@ int interface(void)
 
     int i = 0;
 
+    // printk("preempt_count() = %d\n", preempt_count());
+    // printk("(preempt_count() != 0) = %d\n", (preempt_count() != 0));
+
+    // printk("current->pagefault_disabled  = %d\n", current->pagefault_disabled);
+    // printk("(current->pagefault_disabled != 0) = %d\n", (current->pagefault_disabled != 0));    
+
     kmain();
 
     while(1){

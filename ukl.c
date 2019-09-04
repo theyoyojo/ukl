@@ -17,20 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 #include <linux/ukl.h>
-
-// int dataCounter = 0;
-
-// struct recvstruct
-// {
-// 	int fd;
-// 	void __user *ubuf;
-// 	size_t size;
-// 	unsigned int flags;
-// 	struct sockaddr __user *addr;
-// 	int __user *addr_len;
-// };
-
-// struct recvstruct *data;
+extern void * ukl_stack_switch(void);
+extern void ukl_stack_switch_back(void *);
 
 ssize_t ukl_write(int fd, const void* buf, size_t count) {
 	if(count == -1)
@@ -149,30 +137,15 @@ long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigne
 	error = -EINVAL;
 	if (off & ~PAGE_MASK)
 		goto out;
-
+	// void * ukl_ret;
+	// ukl_ret = ukl_stack_switch();
 	error = ksys_mmap_pgoff(addr, len, prot, flags, fd, off >> PAGE_SHIFT);
+	// if (ukl_ret){
+	// 	ukl_stack_switch_back(ukl_ret);
+	// }
 out:
 	return error;
 }
-
-// int ukl_uname(struct old_utsname * name){
-// 	struct old_utsname tmp;
-
-// 	if (!name)
-// 		return -EFAULT;
-
-// 	down_read(&uts_sem);
-// 	memcpy(&tmp, utsname(), sizeof(tmp));
-// 	up_read(&uts_sem);
-// 	if (copy_to_user(name, &tmp, sizeof(tmp)))
-// 		return -EFAULT;
-
-// 	if (override_release(name->release, sizeof(name->release)))
-// 		return -EFAULT;
-// 	if (override_architecture(name))
-// 		return -EFAULT;
-// 	return 0;
-// }
 
 int ukl_set_tid_address(int * tidptr){
 	extern int __ukl_set_tid_address(int * ptr);
@@ -190,8 +163,15 @@ int ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigset
 }
 
 int ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize){
+	int ret;
+	// void * ukl_ret;
+	// ukl_ret = ukl_stack_switch();
 	extern int __ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize);
-	return __ukl_rt_sigaction(sig, act, oact, sigsetsize);
+	ret = __ukl_rt_sigaction(sig, act, oact, sigsetsize);
+	// if (ukl_ret){
+	// 	ukl_stack_switch_back(ukl_ret);
+	// }
+	return ret;
 }
 
 int ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim, struct rlimit64 * old_rlim){
@@ -272,4 +252,64 @@ void ukl_exit(int error_code){
 long ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3){
 	extern long __ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3);
 	return __ukl_futex(uaddr, op, val, utime, uaddr2, val3);
+}
+
+int ukl_setrlimit (unsigned int  resource, const struct rlimit* rlim){
+	extern int do_prlimit(struct task_struct *tsk, unsigned int resource, struct rlimit *new_rlim, struct rlimit *old_rlim);
+	return do_prlimit(current, resource, rlim, NULL);
+}
+
+int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
+	extern int _ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
+	return _ukl_clock_gettime(which_clock, tp);
+}
+
+int ukl_gettimeofday(struct timeval* tv, struct timezone* tz){
+	extern int _ukl_gettimeofday(struct timeval* tv, struct timezone* tz);
+	return _ukl_gettimeofday(tv, tz);
+}
+
+int ukl_epoll_create1(int flags){
+	extern int _ukl_epoll_create1(int flags);
+	return _ukl_epoll_create1(flags);
+}
+
+int ukl_pipe2(int* fildes, int flags){
+	extern int _ukl_pipe2(int* fildes, int flags);
+	return _ukl_pipe2(fildes, flags);
+}
+
+time_t ukl_time (time_t *t){
+	extern time_t _ukl_time (time_t *t);
+	return _ukl_time (t);
+}
+
+int ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg){
+	extern int _ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
+	return _ukl_fcntl(fd, cmd, arg);
+}
+
+int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event){
+	extern int _ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
+	return _ukl_epoll_ctl(epfd, op, fd, event);
+}
+
+int ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout){
+	extern int _ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
+	return _ukl_epoll_wait(epfd, events, maxevents, timeout);
+}
+
+int ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp){
+	extern int _ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp);
+	return _ukl_nanosleep(rqtp, rmtp);
+}
+
+int ukl_mlock(long start, size_t len){
+	extern int __ukl_mlock(long start, size_t len);
+	return __ukl_mlock(start, len);
+}
+
+int ukl_mlock2(long start, size_t len, int flags){
+	extern int __ukl_mlock2(long start, size_t len, int flags);
+	return __ukl_mlock2(start, len, flags);
 }
