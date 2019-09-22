@@ -15,4 +15,4 @@ stack_dec_print:
 	subq 	$0x100, %rsp
 	movq	%rsp, %rax
 	pushq	%r15
-	retq	
+	retq

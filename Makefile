@@ -12,7 +12,7 @@ stack: glibc
 	gcc -c -o rspcheck.o rspcheck.S -mcmodel=kernel -ggdb
 	gcc -c -o stackcheck.o stackcheck.c -mcmodel=kernel -ggdb
 	make -C ../linux M=$(PWD)
-	ld -r -o stackfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition stackcheck.o --start-group glibcfinal UKLlibevent --end-group 
+	ld -r -o stackfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition stackcheck.o --start-group glibcfinal --end-group 
 	ar cr UKL.a ukl.o interface.o stackfinal.o rspcheck.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
@@ -38,7 +38,7 @@ memcached: glibc
 	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition UKLmemcached --start-group glibcfinal UKLlibevent --end-group 
 	gcc -c -o rspcheck.o rspcheck.S -mcmodel=kernel -ggdb
 	gcc -c -o stackcheck.o stackcheck.c -mcmodel=kernel -ggdb
-	ar cr UKL.a ukl.o interface.o memcachedfinal.o ukl_stack.o rspcheck.o stackcheck.o
+	ar cr UKL.a ukl.o interface.o memcachedfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)

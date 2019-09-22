@@ -12,7 +12,6 @@ extern int printk(const char *fmt, ...);
 extern long stack_dec_populate(int i);
 extern long stack_dec_print(void);
 
-
 #define QUEUE_SIZE 1
 
 void *stackworker(void);
@@ -22,7 +21,6 @@ int kmain(int argc, char *argv[]){
 
 	pthread_t thread_id[QUEUE_SIZE];
 	int i = 0;
-
 
 	for(i = 0; i < QUEUE_SIZE; i++){
 		if (pthread_create( &thread_id[i] , NULL , worker , NULL) < 0) {
@@ -49,8 +47,9 @@ void *stackworker(void)
 	int i = 0;
 	addr = stack_dec_populate(0x10);
 	printk("Start stack address = %lx\n", addr+0x10);
-	for(i = 1; i <= 10; i++){
+	for(i = 1; i <= 1000; i++){
 		addr = stack_dec_populate(i*2048);
+		printk("%d. Stack populating. address = %lx\n", i, addr);
 	}
 	printk("End stack address = %lx\n", addr);
     return 0;
