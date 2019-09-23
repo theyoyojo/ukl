@@ -9,7 +9,7 @@ glibc:
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive 
 
 test: glibc
-	gcc -c -o test-mutex-printers.o test-mutex-printers.c -mcmodel=kernel -ggdb
+	gcc -c -o test-mutex-printers.o tst-mutex8.c -mcmodel=kernel -ggdb
 	make -C ../linux M=$(PWD)
 	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition test-mutex-printers.o --start-group glibcfinal --end-group 
 	ar cr UKL.a ukl.o interface.o testfinal.o
