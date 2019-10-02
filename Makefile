@@ -8,10 +8,10 @@ glibc:
 	rm -rf UKL.a
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive 
 
-test: glibc
-	gcc -c -o test-mutex-printers.o tst-mutex8.c -mcmodel=kernel -ggdb
+testcond: glibc
+	gcc -c -o testcond.o test-cond.c -mcmodel=kernel -ggdb
 	make -C ../linux M=$(PWD)
-	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition test-mutex-printers.o --start-group glibcfinal --end-group 
+	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition testcond.o tests/tst-cond1.o --start-group glibcfinal --end-group 
 	ar cr UKL.a ukl.o interface.o testfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 

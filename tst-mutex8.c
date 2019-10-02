@@ -23,7 +23,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <elf/dl-tunables.h>
+//#include <elf/dl-tunables.h>
+
+#define puts printk
+#define printf printk
 
 static pthread_mutex_t *m;
 static pthread_barrier_t b;
@@ -43,11 +46,11 @@ cl (void *arg)
 
 
 static void *
-tf (void *arg)
+tf1 (void *arg)
 {
   if (pthread_mutex_lock (m) != 0)
     {
-      puts ("tf: mutex_lock failed");
+      puts ("tf1: mutex_lock failed");
       return (void *) 1l;
     }
 
@@ -62,7 +65,7 @@ tf (void *arg)
     do
       if (pthread_cond_wait (&c, m) != 0)
 	{
-	  puts ("tf: cond_wait failed");
+	  puts ("tf1: cond_wait failed");
 	  return (void *) 1l;
 	}
     while (! done);
@@ -73,7 +76,7 @@ tf (void *arg)
 
 	if (pthread_cond_wait (&c, m) != 0)
 	  {
-	    puts ("tf: cond_wait failed");
+	    puts ("tf1: cond_wait failed");
 	    return (void *) 1l;
 	  }
 
@@ -83,13 +86,60 @@ tf (void *arg)
 
   if (pthread_mutex_unlock (m) != 0)
     {
-      puts ("tf: mutex_unlock failed");
+      puts ("tf1: mutex_unlock failed");
       return (void *) 1l;
     }
 
   return NULL;
 }
 
+static void *
+tf2 (void *arg)
+{
+  if (pthread_mutex_lock (m) != 0)
+    {
+      puts ("tf2: mutex_lock failed");
+      return (void *) 1l;
+    }
+
+  int e = pthread_barrier_wait (&b);
+  if (e != 0 && e != PTHREAD_BARRIER_SERIAL_THREAD)
+    {
+      puts ("barrier_wait failed");
+      return (void *) 1l;
+    }
+
+  if (arg == NULL)
+    do
+      if (pthread_cond_wait (&c, m) != 0)
+        {
+          puts ("tf2: cond_wait failed");
+          return (void *) 1l;
+        }
+    while (! done);
+  else
+    do
+      {
+        pthread_cleanup_push (cl, NULL);
+
+        if (pthread_cond_wait (&c, m) != 0)
+          {
+            puts ("tf2: cond_wait failed");
+            return (void *) 1l;
+          }
+
+        pthread_cleanup_pop (0);
+      }
+    while (! done);
+
+  if (pthread_mutex_unlock (m) != 0)
+    {
+      puts ("tf2: mutex_unlock failed");
+      return (void *) 1l;
+    }
+
+  return NULL;
+}
 
 static int
 check_type (const char *mas, pthread_mutexattr_t *ma)
@@ -209,7 +259,7 @@ mutex_destroy of self-trylocked mutex did not return EBUSY %s\n",
     }
 
   pthread_t th;
-  if (pthread_create (&th, NULL, tf, NULL) != 0)
+  if (pthread_create (&th, NULL, tf1, NULL) != 0)
     {
       puts ("1st create failed");
       return 1;
@@ -284,7 +334,7 @@ mutex_destroy of condvar-used mutex did not return EBUSY for %s\n", mas);
       return 1;
     }
 
-  if (pthread_create (&th, NULL, tf, (void *) 1) != 0)
+  if (pthread_create (&th, NULL, tf2, (void *) 1) != 0)
     {
       puts ("2nd create failed");
       return 1;
@@ -357,7 +407,7 @@ mutex_destroy of condvar-used mutex did not return EBUSY for %s\n", mas);
 
 
 int
-kmain (void)
+testmain (void)
 {
   pthread_mutex_t mm;
   m = &mm;
@@ -430,6 +480,16 @@ kmain (void)
 
   return res;
 }
+
+int kmain(void){
+  pthread_t thk;
+  if (pthread_create (&thk, NULL, testmain, NULL) != 0)
+    {
+      puts ("testmain create failed");
+      return 1;
+    }
+}
+
 
 // #define TEST_FUNCTION do_test ()
 // #include "../test-skeleton.c"

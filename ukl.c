@@ -216,12 +216,14 @@ int ukl_munmap(unsigned long addr, size_t len){
 }
 
 void ukl_exit(int error_code){
-	// extern void __ukl_exit(int error_code);
-	// __ukl_exit(error_code);
+	extern void __ukl_exit(int error_code);
+	__ukl_exit(error_code);
+	/*
 	while(1){
       	current->state = TASK_INTERRUPTIBLE;
         schedule();
         }
+	*/
 }
 
 // int ukl_accept4(int fd, struct sockaddr __user * upeer_sockaddr, int __user * upeer_addrlen, int flags);
@@ -313,3 +315,15 @@ int ukl_mlock2(long start, size_t len, int flags){
 	extern int __ukl_mlock2(long start, size_t len, int flags);
 	return __ukl_mlock2(start, len, flags);
 }
+
+int ukl_tgkill(pid_t tgid, pid_t pid, int sig){
+	extern int __ukl_tgkill(pid_t tgid, pid_t pid, int sig);
+	return __ukl_tgkill(tgid, pid, sig);
+}
+
+pid_t ukl_getpid(void){
+	extern pid_t __ukl_getpid(void);
+	return __ukl_getpid();
+}
+
+
