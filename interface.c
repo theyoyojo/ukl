@@ -25,6 +25,10 @@ extern void __libc_setup_tls (unsigned long start, unsigned long tbss_start, uns
 extern void __ctype_init (void);
 extern unsigned long get_gs_value(void);
 
+void printaddr(long addr){
+	printk("*** Called from addr 0x%lx ***\n", addr);
+}
+
 unsigned int inet_addr2(char* ip)
 {
     int a, b, c, d;
