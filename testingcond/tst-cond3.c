@@ -36,6 +36,16 @@ static pthread_mutex_t mut3 = PTHREAD_MUTEX_INITIALIZER;
 
 #define N3 10
 
+static void
+delayed_exit_thread (int seconds_as_ptr)
+{
+  int seconds = seconds_as_ptr;
+  struct timespec delay = { seconds, 0 };
+  struct timespec remaining = { 0 };
+  if (nanosleep (&delay, &remaining) != 0)
+    printf("Cant nanosleep\n");
+  return;
+}
 
 static void *
 tf3 (void *arg)
@@ -99,7 +109,7 @@ do_test3 (void)
 	}
     }
 
-  delayed_exit (1);
+  delayed_exit_thread(1);
 
   /* This call should never return.  */
   pthread_cond_wait (&cond3, &mut3);

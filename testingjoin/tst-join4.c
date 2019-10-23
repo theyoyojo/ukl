@@ -30,12 +30,15 @@ static pthread_barrier_t bar4;
 static void *
 tf4 (void *arg)
 {
+  printf("In tf4\n");
   if (pthread_barrier_wait (&bar4) != 0)
     {
       puts ("tf4: barrier_wait failed");
       exit (1);
+    } else {
+      puts ("tf4: barrier_wait succeeded");
     }
-
+  printf("leaving tf4\n");
   return (void *) 1l;
 }
 
@@ -57,7 +60,7 @@ do_test4 (void)
       exit (1);
     }
 
-  if (pthread_attr_setstacksize (&a, 1 * 1024 * 1024) != 0)
+  if (pthread_attr_setstacksize (&a, 16 * 1024 * 1024) != 0)
     {
       puts ("attr_setstacksize failed");
       return 1;
@@ -82,7 +85,14 @@ do_test4 (void)
       puts ("1st create failed");
       exit (1);
     }
-
+/*
+  if (pthread_barrier_wait (&bar4) != 0)
+    {
+      puts ("do_test4: barrier_wait failed");
+    } else {
+      puts ("do_test4: barrier_wait succeeded");
+    }
+*/
   if (pthread_attr_destroy (&a) != 0)
     {
       puts ("attr_destroy failed");
@@ -119,6 +129,6 @@ do_test4 (void)
       exit (1);
     }
 
-  exit (0);
+  return 0;
 }
 

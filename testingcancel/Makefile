@@ -3,11 +3,11 @@ objects := $(wildcard *.o)
 
 .PHONY: clean
 
-archive: tst-cond
-	ar cr tst.a $(objects)
+archive: tst
+	ar cr tst.a *.o
 	cp tst.a ../
 
-tst-cond: clean
+tst: clean
 	gcc -c $(sources) -mcmodel=kernel -ggdb -Wno-implicit
 
 clean:
