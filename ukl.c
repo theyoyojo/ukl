@@ -326,3 +326,8 @@ pid_t ukl_getpid(void){
 	return __ukl_getpid();
 }
 
+int ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags){
+	extern int __ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags);
+	return __ukl_sendmmsg(fd, mmsg, vlen, flags);
+}
+

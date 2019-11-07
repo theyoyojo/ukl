@@ -28,6 +28,8 @@ extern int do_test22(void);
 extern int do_test23(void);
 extern int do_test24(void);
 extern int do_test25(void);
+extern int do_test7r(void);
+extern int do_testec(void);
 
 int testmain(void){
 	printk("Starting  tests\n");
@@ -54,38 +56,44 @@ int testmain(void){
 		printk("tst-4 passed\n");
 	}else{
 		printk("tst-4 failed\n");
-	}
+	}*/
         printk("\n ************* \n\n");
 	if(do_test5() == 0){
 		printk("tst-5 passed\n");
 	}else{
 		printk("tst-5 failed\n");
-	}*/
+	}
         printk("\n ************* \n\n");
 	if(do_test6() == 0){
 		printk("tst-6 passed\n");
 	}else{
 		printk("tst-6 failed\n");
 	}
-        /*printk("\n ************* \n\n");
+        printk("\n ************* \n\n");
 	if(do_test7() == 0){
 		printk("tst-7 passed\n");
 	}else{
 		printk("tst-7 failed\n");
-	}*/
+	}
+        printk("\n ************* \n\n");
+	if(do_test7r() == 0){
+		printk("tst-7r passed\n");
+	}else{
+		printk("tst-7r failed\n");
+	}
         printk("\n ************* \n\n");
 	if(do_test8() == 0){
 		printk("tst-8 passed\n");
 	}else{
 		printk("tst-8 failed\n");
 	}
-        printk("\n ************* \n\n");
+        /*printk("\n ************* \n\n");
 	if(do_test9() == 0){
 		printk("tst-9 passed\n");
 	}else{
 		printk("tst-9 failed\n");
-	}
-        printk("\n ************* \n\n");
+	}*/
+        /*printk("\n ************* \n\n");
 	if(do_test10() == 0){
 		printk("tst-10 passed\n");
 	}else{
@@ -163,7 +171,7 @@ int testmain(void){
 	}else{
 		printk("tst-22 failed\n");
 	}
-        /*printk("\n ************* \n\n");
+        printk("\n ************* \n\n");
 	if(do_test23() == 0){
 		printk("tst-23 passed\n");
 	}else{
@@ -174,7 +182,7 @@ int testmain(void){
 		printk("tst-24 passed\n");
 	}else{
 		printk("tst-24 failed\n");
-	}*/
+	}
         printk("\n ************* \n\n");
 	if(do_test25() == 0){
 		printk("tst-25 passed\n");
@@ -192,6 +200,12 @@ int testmain(void){
 		printk("tst-27 passed\n");
 	}else{
 		printk("tst-27 failed\n");
+	}*/
+        printk("\n ************* \n\n");
+	if(do_testec() == 0){
+		printk("tst-ec passed\n");
+	}else{
+		printk("tst-ec failed\n");
 	}
 }
 
