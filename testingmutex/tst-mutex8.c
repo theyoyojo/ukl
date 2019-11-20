@@ -30,26 +30,26 @@
 static pthread_mutex_t *m8;
 static pthread_barrier_t b8;
 static pthread_cond_t c8;
-static bool done7;
+static bool done8;
 
 
 static void
-cl7 (void *arg)
+cl8 (void *arg)
 {
   if (pthread_mutex_unlock (m8) != 0)
     {
-      puts ("cl7: mutex_unlocked failed");
+      puts ("cl8: mutex_unlocked failed");
       exit (1);
     }
 }
 
 
 static void *
-tf7 (void *arg)
+tf8 (void *arg)
 {
   if (pthread_mutex_lock (m8) != 0)
     {
-      puts ("tf7: mutex_lock failed");
+      puts ("tf8: mutex_lock failed");
       return (void *) 1l;
     }
 
@@ -64,28 +64,28 @@ tf7 (void *arg)
     do
       if (pthread_cond_wait (&c8, m8) != 0)
 	{
-	  puts ("tf7: cond_wait failed");
+	  puts ("tf8: cond_wait failed");
 	  return (void *) 1l;
 	}
-    while (! done7);
+    while (! done8);
   else
     do
       {
-	pthread_cleanup_push (cl7, NULL);
+	pthread_cleanup_push (cl8, NULL);
 
 	if (pthread_cond_wait (&c8, m8) != 0)
 	  {
-	    puts ("tf7: cond_wait failed");
+	    puts ("tf8: cond_wait failed");
 	    return (void *) 1l;
 	  }
 
 	pthread_cleanup_pop (0);
       }
-    while (! done7);
+    while (! done8);
 
   if (pthread_mutex_unlock (m8) != 0)
     {
-      puts ("tf7: mutex_unlock failed");
+      puts ("tf8: mutex_unlock failed");
       return (void *) 1l;
     }
 
@@ -209,14 +209,14 @@ mutex_destroy of self-trylocked mutex did not return EBUSY %s\n",
       printf ("2nd mutex_unlock failed for %s\n", mas);
       return 1;
     }
-
+/*
   pthread_t th;
-  if (pthread_create (&th, NULL, tf7, NULL) != 0)
+  if (pthread_create (&th, NULL, tf8, NULL) != 0)
     {
       puts ("1st create failed");
       return 1;
     }
-  done7 = false;
+  done8 = false;
 
   e = pthread_barrier_wait (&b8);
   if (e != 0 && e != PTHREAD_BARRIER_SERIAL_THREAD)
@@ -237,7 +237,6 @@ mutex_destroy of self-trylocked mutex did not return EBUSY %s\n",
       return 1;
     }
 
-  /* Elided mutexes don't fail destroy.  */
   if (assume_elided_mutex == false)
     {
       e = pthread_mutex_destroy (m8);
@@ -255,7 +254,7 @@ mutex_destroy of condvar-used mutex did not return EBUSY for %s\n", mas);
 	}
     }
 
-  done7 = true;
+  done8 = true;
   if (pthread_cond_signal (&c8) != 0)
     {
       puts ("cond_signal failed");
@@ -279,19 +278,20 @@ mutex_destroy of condvar-used mutex did not return EBUSY for %s\n", mas);
       printf ("mutex_destroy after condvar-use failed for %s\n", mas);
       return 1;
     }
-
+*/
   if (pthread_mutex_init (m8, ma) != 0)
     {
       printf ("3rd mutex_init failed for %s\n", mas);
       return 1;
     }
 
-  if (pthread_create (&th, NULL, tf7, (void *) 1) != 0)
+  pthread_t th;
+  if (pthread_create (&th, NULL, tf8, (void *) 1) != 0)
     {
       puts ("2nd create failed");
       return 1;
     }
-  done7 = false;
+  done8 = false;
 
   e = pthread_barrier_wait (&b8);
   if (e != 0 && e != PTHREAD_BARRIER_SERIAL_THREAD)
@@ -337,6 +337,7 @@ mutex_destroy of condvar-used mutex did not return EBUSY for %s\n", mas);
       return 1;
     }
 
+  void *r;
   if (pthread_join (th, &r) != 0)
     {
       puts ("join failed");

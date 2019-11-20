@@ -8,11 +8,7 @@
 #include <string.h> 
 #include <pthread.h> 
 
-extern int printk(const char *fmt, ...);
-extern void cond_resched(void);
-
 #define QUEUE_SIZE 5
-#define printff printk
 
 // __thread int counter = 10;
 // __thread int nocounter;
@@ -37,8 +33,8 @@ int kmain(int argc, char *argv[]){
 
 
 	for(i = 0; i < QUEUE_SIZE; i++){
+		printukl("creating %d\n", i);
 		if (pthread_create( &thread_id[i] , NULL , printer , (void *)i) < 0) {
-			perror("could not create thread");
 			return 1;
 		}	
 	}
@@ -48,7 +44,7 @@ int kmain(int argc, char *argv[]){
 			perror("could not join thread");
 			return 1;
 		}else{
-			printff("pthread_join worked for thread id %d\n",i);
+			printukl("pthread_join worked for thread id %d\n",i);
 		}
 	}
 	
@@ -58,16 +54,16 @@ int kmain(int argc, char *argv[]){
 void *printer(int * id)
 {
 	while(1){
-    printff("Thread %d = A\n", id);
-    printff("Thread %d = quick\n", id);
-    printff("Thread %d = brown\n", id);
-    printff("Thread %d = fox\n", id);
-    printff("Thread %d = jumped\n", id);
-    printff("Thread %d = over\n", id);
-    printff("Thread %d = a\n", id);
-    printff("Thread %d = lazy\n", id);
-    printff("Thread %d = dog.\n", id);
-    // yield();
+		printukl("Thread %d = A\n", id);
+		printukl("Thread %d = quick\n", id);
+		printukl("Thread %d = brown\n", id);
+		printukl("Thread %d = fox\n", id);
+		printukl("Thread %d = jumped\n", id);
+		printukl("Thread %d = over\n", id);
+		printukl("Thread %d = a\n", id);
+		printukl("Thread %d = lazy\n", id);
+		printukl("Thread %d = dog.\n", id);
+		// yield();
 	}
-    return 0;
+	return 0;
 } 

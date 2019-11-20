@@ -1,7 +1,7 @@
 obj-y += ukl.o interface.o
 
 
-.PHONY: glibc
+.PHONY: glibc cj
 
 glibc:
 	./extractglibc.sh
@@ -10,10 +10,21 @@ glibc:
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive addrprint.o
 
 test: glibc
-	gcc -c -o testingmain.o testingmain.c -mcmodel=kernel -ggdb
 	make -C ../linux M=$(PWD)
-	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition testingmain.o tst.a --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o interface.o testfinal.o
+	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o tst.a --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o testfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
+
+cj:
+	gcc -o cj cj.c -lpthread -ggdb
+
+canceljoin: glibc
+	gcc -c -o canceljoin.o canceljoin.c -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
+	ld -r -o cjfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition canceljoin.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o cjfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)

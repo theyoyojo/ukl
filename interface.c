@@ -59,30 +59,30 @@ void setup_mm(void){
     me->mm->start_brk = 0x405000;
     me->mm->brk = 0x405000;
 
-    printk("thread_info->flags = %lx\n", me->thread_info.flags);
+    printukl("thread_info->flags = %lx\n", me->thread_info.flags);
 
-    printk("Set up of mm struct, done.\n");
+    printukl("Set up of mm struct, done.\n");
 }
 
 void lib_start_kmain(void){
     struct task_struct *me = current;
     __libc_setup_tls(__tls_data_start, __tls_bss_start, __tls_bss_end);
-    printk("TLS address for main thread is %lx\n", me->thread.fsbase);
+    printukl("TLS address for main thread is %lx\n", me->thread.fsbase);
     __pthread_initialize_minimal_internal(me->thread.fsbase);
-    printk("Set up of TCB done. \n");
+    printukl("Set up of TCB done. \n");
     __ctype_init ();
-    printk("Set up of ctype data done. \n");
+    printukl("Set up of ctype data done. \n");
 
-    printk("Old task struct flags = %x\n", me->flags);
+    printukl("Old task struct flags = %x\n", me->flags);
     me->flags = me->flags^PF_KTHREAD;
     me->flags = me->flags^PF_NOFREEZE;
     me->flags = me->flags^PF_USED_ASYNC;
     me->flags = me->flags^PF_SUPERPRIV; 
-    printk("Current task struct flags = %x\n", me->flags);
-    printk("Current task struct address = %lx\n", me);
-    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+    printukl("Current task struct flags = %x\n", me->flags);
+    printukl("Current task struct address = %lx\n", me);
+    printukl("Old task struct thread_info flags = %x\n", me->thread_info.flags);
     me->thread_info.flags = 0;
-    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+    printukl("Old task struct thread_info flags = %x\n", me->thread_info.flags);
 }
 
 void setup_networking(void){
@@ -95,7 +95,7 @@ void setup_networking(void){
     fd = ukl_socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
 
     if(fd < 0){
-        printk("Problem with socket\n");
+        printukl("Problem with socket\n");
         return  -1;
     }
 
@@ -108,9 +108,10 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCSIFADDR, &ifr);
     if(retioctl < 0){
-        printk("1st Ioctl failed\n");
+        printukl("1st Ioctl failed\n");
         return  -1;
     }
+
 
     /*strncpy(ifr.ifr_name, "eth0", 4);*/
     ifr.ifr_flags |= IFF_BROADCAST;
@@ -118,9 +119,10 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCGIFFLAGS, &ifr);
     if(retioctl < 0){
-        printk("2nd Ioctl failed\n");
+        printukl("2nd Ioctl failed\n");
         return  -1;
     }
+
 
     /*strncpy(ifr.ifr_name, "eth0", 4);*/
     ifr.ifr_flags |= IFF_UP;
@@ -130,12 +132,24 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCSIFFLAGS, &ifr);
     if(retioctl < 0){
-        printk("3rd Ioctl failed\n");
+        printukl("3rd Ioctl failed\n");
         return  -1;
     }
+
+#ifndef CONFIG_PREEMPT
+#ifdef CONFIG_UNIKERNEL_LINUX
+    enter_ukl();
+#endif
+#endif
     msleep(3000);
 
-    printk("Set up of network interface, done.\n");
+#ifndef CONFIG_PREEMPT
+#ifdef CONFIG_UNIKERNEL_LINUX
+    exit_ukl();
+#endif
+#endif
+
+    printukl("Set up of network interface, done.\n");
 }
 
 int interface(void)
@@ -145,12 +159,6 @@ int interface(void)
     lib_start_kmain();
 
     int i = 0;
-
-    // printk("preempt_count() = %d\n", preempt_count());
-    // printk("(preempt_count() != 0) = %d\n", (preempt_count() != 0));
-
-    // printk("current->pagefault_disabled  = %d\n", current->pagefault_disabled);
-    // printk("(current->pagefault_disabled != 0) = %d\n", (current->pagefault_disabled != 0));    
 
     kmain();
 

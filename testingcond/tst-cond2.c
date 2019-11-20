@@ -94,7 +94,7 @@ do_test2 (void)
       return 1;
     }
 
-  if (pthread_attr_setstacksize (&at, 2 * 1024 * 1024) != 0)
+  if (pthread_attr_setstacksize (&at, 16 * 1024 * 1024) != 0)
     {
       puts ("attr_setstacksize failed");
       return 1;

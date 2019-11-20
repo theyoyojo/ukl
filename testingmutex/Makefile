@@ -5,7 +5,9 @@ objects := $(wildcard *.o)
 
 archive: tst
 	ar cr tst.a *.o
+	rm -rf ../tst.a
 	cp tst.a ../
+	nm tst.a
 
 tst: clean
 	gcc -c $(sources) -mcmodel=kernel -ggdb -Wno-implicit
