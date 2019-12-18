@@ -18,6 +18,25 @@
  */
 #include <linux/ukl.h>
 
+#ifdef CONFIG_PREEMPT_NONE
+void enter_ukl(void)
+{
+       exit_application();
+       return;
+}
+
+void exit_ukl(void)
+{
+       enter_application();
+       cond_resched();
+}
+#else
+#define enter_ukl()    do {} while(0)
+#define exit_ukl()     do {} while(0)
+#endif
+
+
+
 void printukl(const char *fmt, ...) {
 	static char buf[1024];
 	va_list args;
@@ -243,12 +262,10 @@ int ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigset
 }
 
 int ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize){
-	int ret;
 	extern int __ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize);
-	ret = __ukl_rt_sigaction(sig, act, oact, sigsetsize);
 	int retval;
 	enter_ukl();
-	return ret;
+	retval = __ukl_rt_sigaction(sig, act, oact, sigsetsize);
 	exit_ukl();
 	return retval;
 }
@@ -257,7 +274,7 @@ int ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_
 	extern int __ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim,	struct rlimit64 * old_rlim);
 	int retval;
 	enter_ukl();
-	retval = __ukl_prlimit64(pid, resource, new_rlim,	old_rlim);
+	retval = __ukl_prlimit64(pid, resource, new_rlim, old_rlim);
 	exit_ukl();
 	return retval;
 }
@@ -291,17 +308,6 @@ int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 }
 
 
-long ukl_clone(unsigned long clone_flags, unsigned long newsp, int * parent_tidptr, unsigned long tls, int * child_tidptr){
-	extern long _ukl_do_fork(unsigned long clone_flags, unsigned long newsp, unsigned long stack_size, int __user *parent_tidptr, int __user *child_tidptr, unsigned long tls);
-	long ret;
-	ret = _ukl_do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr, tls);
-	long retval;
-	enter_ukl();
-	return ret;
-	exit_ukl();
-	return retval;
-}
-
 int ukl_munmap(unsigned long addr, size_t len){
 	extern int __ukl_munmap(unsigned long addr, size_t len);
 	int retval;
@@ -328,91 +334,91 @@ long ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel
 }
 
 int ukl_setrlimit (unsigned int  resource, const struct rlimit* rlim){
-	extern int do_prlimit(struct task_struct *tsk, unsigned int resource, struct rlimit *new_rlim, struct rlimit *old_rlim);
+	extern int __ukl_setrlimit(unsigned int resource, const struct rlimit* rlim);
 	int retval;
 	enter_ukl();
-	return do_prlimit(current, resource, rlim, NULL);
+	retval = __ukl_setrlimit(resource, rlim);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
-	extern int _ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
+	extern int __ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
 	int retval;
 	enter_ukl();
-	return _ukl_clock_gettime(which_clock, tp);
+	retval = __ukl_clock_gettime(which_clock, tp);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_gettimeofday(struct timeval* tv, struct timezone* tz){
-	extern int _ukl_gettimeofday(struct timeval* tv, struct timezone* tz);
+	extern int __ukl_gettimeofday(struct timeval* tv, struct timezone* tz);
 	int retval;
 	enter_ukl();
-	return _ukl_gettimeofday(tv, tz);
+	retval = __ukl_gettimeofday(tv, tz);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_epoll_create1(int flags){
-	extern int _ukl_epoll_create1(int flags);
+	extern int __ukl_epoll_create1(int flags);
 	int retval;
 	enter_ukl();
-	return _ukl_epoll_create1(flags);
+	retval = __ukl_epoll_create1(flags);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_pipe2(int* fildes, int flags){
-	extern int _ukl_pipe2(int* fildes, int flags);
+	extern int __ukl_pipe2(int* fildes, int flags);
 	int retval;
 	enter_ukl();
-	return _ukl_pipe2(fildes, flags);
+	retval = __ukl_pipe2(fildes, flags);
 	exit_ukl();
 	return retval;
 }
 
 time_t ukl_time (time_t *t){
-	extern time_t _ukl_time (time_t *t);
+	extern time_t __ukl_time (time_t *t);
 	time_t retval;
 	enter_ukl();
-	return _ukl_time (t);
+	retval = __ukl_time (t);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg){
-	extern int _ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
+	extern int __ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
 	int retval;
 	enter_ukl();
-	return _ukl_fcntl(fd, cmd, arg);
+	retval = __ukl_fcntl(fd, cmd, arg);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event){
-	extern int _ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
+	extern int __ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
 	int retval;
 	enter_ukl();
-	return _ukl_epoll_ctl(epfd, op, fd, event);
+	retval = __ukl_epoll_ctl(epfd, op, fd, event);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout){
-	extern int _ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
+	extern int __ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
 	int retval;
 	enter_ukl();
-	return _ukl_epoll_wait(epfd, events, maxevents, timeout);
+	retval =  __ukl_epoll_wait(epfd, events, maxevents, timeout);
 	exit_ukl();
 	return retval;
 }
 
 int ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp){
-	extern int _ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp);
+	extern int __ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp);
 	int retval;
 	enter_ukl();
-	return _ukl_nanosleep(rqtp, rmtp);
+	retval = __ukl_nanosleep(rqtp, rmtp);
 	exit_ukl();
 	return retval;
 }
@@ -446,7 +452,7 @@ int ukl_tgkill(pid_t tgid, pid_t pid, int sig){
 
 pid_t ukl_getpid(void){
 	extern pid_t __ukl_getpid(void);
-	pid_t retval();
+	pid_t retval;
 	enter_ukl();
 	retval = __ukl_getpid();
 	exit_ukl();

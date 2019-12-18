@@ -10,12 +10,17 @@ glibc:
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive addrprint.o
 
 test: glibc
+	cp /home/fedora/unikernel/build-glibc/glibc/nptl/${case}.c .
+	gcc -c -o ${case}.o ${case}.c -mcmodel=kernel -ggdb -Wno-implicit
+	gcc -c -o testingmain.o testingmain.c -mcmodel=kernel -ggdb -Wno-implicit
+	ld -r -o test.o testingmain.o ${case}.o
 	make -C ../linux M=$(PWD)
-	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o tst.a --start-group glibcfinal --end-group 
+	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o test.o --start-group glibcfinal --end-group 
 	ar cr UKL.a ukl.o testfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
+	rm -rf ${case}*
 
 cj:
 	gcc -o cj cj.c -lpthread -ggdb
@@ -106,3 +111,4 @@ run:
 
 debug:
 	make -C ../min-initrd debugU
+

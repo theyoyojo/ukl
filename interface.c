@@ -59,30 +59,30 @@ void setup_mm(void){
     me->mm->start_brk = 0x405000;
     me->mm->brk = 0x405000;
 
-    printukl("thread_info->flags = %lx\n", me->thread_info.flags);
+    printk("thread_info->flags = %lx\n", me->thread_info.flags);
 
-    printukl("Set up of mm struct, done.\n");
+    printk("Set up of mm struct, done.\n");
 }
 
 void lib_start_kmain(void){
     struct task_struct *me = current;
     __libc_setup_tls(__tls_data_start, __tls_bss_start, __tls_bss_end);
-    printukl("TLS address for main thread is %lx\n", me->thread.fsbase);
+    printk("TLS address for main thread is %lx\n", me->thread.fsbase);
     __pthread_initialize_minimal_internal(me->thread.fsbase);
-    printukl("Set up of TCB done. \n");
+    printk("Set up of TCB done. \n");
     __ctype_init ();
-    printukl("Set up of ctype data done. \n");
+    printk("Set up of ctype data done. \n");
 
-    printukl("Old task struct flags = %x\n", me->flags);
+    printk("Old task struct flags = %x\n", me->flags);
     me->flags = me->flags^PF_KTHREAD;
     me->flags = me->flags^PF_NOFREEZE;
     me->flags = me->flags^PF_USED_ASYNC;
     me->flags = me->flags^PF_SUPERPRIV; 
-    printukl("Current task struct flags = %x\n", me->flags);
-    printukl("Current task struct address = %lx\n", me);
-    printukl("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+    printk("Current task struct flags = %x\n", me->flags);
+    printk("Current task struct address = %lx\n", me);
+    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
     me->thread_info.flags = 0;
-    printukl("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
 }
 
 void setup_networking(void){
@@ -95,7 +95,7 @@ void setup_networking(void){
     fd = ukl_socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
 
     if(fd < 0){
-        printukl("Problem with socket\n");
+        printk("Problem with socket\n");
         return  -1;
     }
 
@@ -108,7 +108,7 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCSIFADDR, &ifr);
     if(retioctl < 0){
-        printukl("1st Ioctl failed\n");
+        printk("1st Ioctl failed\n");
         return  -1;
     }
 
@@ -119,7 +119,7 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCGIFFLAGS, &ifr);
     if(retioctl < 0){
-        printukl("2nd Ioctl failed\n");
+        printk("2nd Ioctl failed\n");
         return  -1;
     }
 
@@ -132,7 +132,7 @@ void setup_networking(void){
 
     retioctl = ukl_ioctl(fd, SIOCSIFFLAGS, &ifr);
     if(retioctl < 0){
-        printukl("3rd Ioctl failed\n");
+        printk("3rd Ioctl failed\n");
         return  -1;
     }
 
@@ -149,7 +149,7 @@ void setup_networking(void){
 #endif
 #endif
 
-    printukl("Set up of network interface, done.\n");
+    printk("Set up of network interface, done.\n");
 }
 
 int interface(void)
