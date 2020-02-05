@@ -1,7 +1,7 @@
 obj-y += ukl.o interface.o
 
 
-.PHONY: glibc cj
+.PHONY: glibc cj utb4 barriercheck
 
 glibc:
 	./extractglibc.sh
@@ -10,6 +10,7 @@ glibc:
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive addrprint.o
 
 test: glibc
+	rm -rf tst*
 	cp /home/fedora/unikernel/build-glibc/glibc/nptl/${case}.c .
 	gcc -c -o ${case}.o ${case}.c -mcmodel=kernel -ggdb -Wno-implicit
 	gcc -c -o testingmain.o testingmain.c -mcmodel=kernel -ggdb -Wno-implicit
@@ -20,7 +21,15 @@ test: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
-	rm -rf ${case}*
+
+stackextend: glibc
+	gcc -c -o stackextend.o stackextend.c -mcmodel=kernel -ggdb -Wno-implicit
+	make -C ../linux M=$(PWD)
+	ld -r -o sefinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o stackextend.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o sefinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
 
 cj:
 	gcc -o cj cj.c -lpthread -ggdb
@@ -112,3 +121,13 @@ run:
 debug:
 	make -C ../min-initrd debugU
 
+mon:
+	make -C ../min-initrd monU
+
+utb4:
+	rm utb4
+	gcc -o utb4 utb4.c -lpthread -ggdb
+
+barriercheck:
+	rm -rf barriercheck
+	gcc -o barriercheck barriercheck.c -lpthread -ggdb

@@ -309,6 +309,7 @@ int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 
 
 int ukl_munmap(unsigned long addr, size_t len){
+	printk("UNMAP:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
 	extern int __ukl_munmap(unsigned long addr, size_t len);
 	int retval;
 	enter_ukl();

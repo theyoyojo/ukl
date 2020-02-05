@@ -161,11 +161,11 @@ int interface(void)
     int i = 0;
 
     kmain();
-
+    
     while(1){
         current->state = TASK_INTERRUPTIBLE;
         schedule();
-        }
-   
+       }
+    
     return 0;
 }
