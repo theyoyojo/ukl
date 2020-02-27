@@ -21,6 +21,21 @@
 #ifdef CONFIG_PREEMPT_NONE
 void enter_ukl(void)
 {
+       /*
+	__asm__("cmp $0x0, %rsp\n"
+	       "jl 1f\n"
+	       "movq %rsp, %rax\n"
+               "subq $100, %rax\n"
+	       "movq %rax, 0x0(%rax)\n"
+	       "subq $4096, %rax\n"
+	       "movq %rax, 0x0(%rax)\n"
+	       "subq $8192, %rax\n"
+	       "movq %rax, 0x0(%rax)\n"
+	       "subq $12288, %rax\n"
+	       "movq %rax, 0x0(%rax)\n"
+	       "1:"
+	       );
+	*/
        exit_application();
        return;
 }
@@ -79,6 +94,15 @@ long ukl_open(const char* filename, int flags, unsigned short mode){
 	long retval;
 	enter_ukl();
 	retval = __ukl_open(filename, flags, mode);
+	exit_ukl();
+	return retval;
+}
+
+long ukl_openat(int dfd, const char * filename, int flags, umode_t mode){
+	extern long __ukl_openat(int dfd, const char * filename, int flags, umode_t mode);
+	long retval;
+	enter_ukl();
+	retval = __ukl_openat(dfd, filename, flags, mode);
 	exit_ukl();
 	return retval;
 }
@@ -229,8 +253,9 @@ long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigne
 	extern long __ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
 	long retval;
 	enter_ukl();
-	retval = __ukl_mmap(addr, len, prot, flags, fd, off);
+enter_ukl();	retval = __ukl_mmap(addr, len, prot, flags, fd, off);
 	exit_ukl();
+	//printk("MMAP:\taddr = 0x%lx\tlen = 0x%lx\n", retval, len);
 	return retval;
 }
 
@@ -309,12 +334,13 @@ int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 
 
 int ukl_munmap(unsigned long addr, size_t len){
-	printk("UNMAP:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
+	//printk("UNMAP START:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
 	extern int __ukl_munmap(unsigned long addr, size_t len);
 	int retval;
 	enter_ukl();
 	retval = __ukl_munmap(addr, len);
 	exit_ukl();
+	//printk("UNMAP DONE:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
 	return retval;
 }
 
@@ -465,6 +491,42 @@ int ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int f
 	int retval;
 	enter_ukl();
 	retval = __ukl_sendmmsg(fd, mmsg, vlen, flags);
+	exit_ukl();
+	return retval;
+}
+
+long ukl_mknod(const char * filename, umode_t mode, unsigned int dev){
+	extern long __ukl_mknod(const char * filename, umode_t mode, unsigned int dev);
+	long retval;
+	enter_ukl();
+	retval = __ukl_mknod(filename, mode, dev);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data){
+	extern int __ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data);
+	int retval;
+	enter_ukl();
+	retval =__ukl_mount(dev_name, dir_name, type, flags, data);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_chroot(const char * filename){
+	extern int __ukl_chroot(const char * filename);
+	int retval;
+	enter_ukl();
+	retval = __ukl_chroot(filename);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_chdir(const char * filename){
+	extern int __ukl_chdir(const char * filename);
+	int retval;
+	enter_ukl();
+	retval = __ukl_chdir(filename);
 	exit_ukl();
 	return retval;
 }

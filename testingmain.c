@@ -5,16 +5,13 @@
 
 extern int printk(const char *format, ...);
 extern int do_test(void);
-typedef void (*smp_call_func_t)(void *info);
-extern int smp_call_function_single(int cpuid, smp_call_func_t func, void *info,int wait);
+unsigned long tnums[30];
 
 void myprintk(void){
 	printk("In function myprintk\n");
 }
 
 int testmain(void){
-
-	/*
 	printk("Starting  test\n");
 	printk("\n ************* \n\n");
 	if(do_test() == 0){
@@ -23,14 +20,15 @@ int testmain(void){
 		printk("test failed\n");
 	}
         printk("\n ************* \n\n");
-	*/
-
-	smp_call_function_single(7, myprintk, NULL, 1);
 
 	return 0;
 }
 
 int kmain(void){
+	int i = 0;
+	for(i = 0; i < 30; i++){
+		tnums[i] = 31;
+	}
 
 	/*
 	pthread_attr_t attr;

@@ -9,6 +9,14 @@ glibc:
 	rm -rf UKL.a
 	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive addrprint.o
 
+fstest: glibc
+	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
+	ld -r -o fsfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition fsbringup.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o fsfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
 test: glibc
 	rm -rf tst*
 	cp /home/fedora/unikernel/build-glibc/glibc/nptl/${case}.c .
