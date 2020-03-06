@@ -18,6 +18,56 @@
  */
 #include <linux/ukl.h>
 
+void ukl_save_regs(void){
+	__asm__("pushq	%r15\n"
+		"pushq	%r14\n"
+		"pushq	%r13\n"
+		"pushq	%r12\n"
+		"pushq	%r11\n"
+		"pushq	%r10\n"
+		"pushq	%r8\n"
+		"pushq	%r9\n"
+		"pushq	%rdi\n"
+		"pushq	%rsi\n"
+		"pushq	%rbp\n"
+		"pushq	%rdx\n"
+		"pushq	%rcx\n"
+		"pushq	%rbx\n"
+		"pushq	%rax"
+               );
+}
+
+void ukl_restore_regs(void){
+	__asm__("popq  %rax\n"
+                "popq  %rbx\n"
+                "popq  %rcx\n"
+                "popq  %rdx\n"
+                "popq  %rbp\n"
+                "popq  %rsi\n"
+                "popq  %rdi\n"
+                "popq  %r9\n"
+                "popq  %r8\n"
+                "popq  %r10\n"
+                "popq  %r11\n"
+                "popq  %r12\n"
+                "popq  %r13\n"
+                "popq  %r14\n"
+		"popq  %r15"
+	       );
+}
+
+void ukl_handle_signals(void){
+	struct ksignal ksig;
+	void (*ukl_handler)(int,...);
+
+	ukl_save_regs();
+	while (get_signal(&ksig)) {
+		ukl_handler = (void*) ksig.ka.sa.sa_handler;
+		ukl_handler(ksig.sig, &ksig.info, &ksig.ka.sa.sa_restorer);
+	}
+	ukl_restore_regs();
+}
+
 #ifdef CONFIG_PREEMPT_NONE
 void enter_ukl(void)
 {
@@ -43,6 +93,7 @@ void enter_ukl(void)
 void exit_ukl(void)
 {
        enter_application();
+       ukl_handle_signals();
        cond_resched();
 }
 #else
@@ -218,6 +269,15 @@ int ukl_setsockopt(int fd, int level, int optname, char *optval, int optlen){
 	int retval;
 	enter_ukl();
 	retval = __ukl_setsockopt(fd, level, optname, optval, optlen);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen){
+	extern int __ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen);
+	int retval;
+	enter_ukl();
+	retval = __ukl_getsockopt(fd, level, optname, optval, optlen);
 	exit_ukl();
 	return retval;
 }

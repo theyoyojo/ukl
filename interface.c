@@ -59,6 +59,8 @@ void setup_mm(void){
     me->mm->start_brk = 0x405000;
     me->mm->brk = 0x405000;
 
+    me->active_mm = me->mm;
+
     printk("thread_info->flags = %lx\n", me->thread_info.flags);
 
     printk("Set up of mm struct, done.\n");
