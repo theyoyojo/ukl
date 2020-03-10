@@ -591,3 +591,20 @@ int ukl_chdir(const char * filename){
 	return retval;
 }
 
+long ukl_mkdir(const char *pathname, umode_t mode){
+	extern long __ukl_mkdir(const char *pathname, umode_t mode);
+	int retval;
+	enter_ukl();
+	retval = __ukl_mkdir(pathname, mode);
+	exit_ukl();
+	return retval;
+}
+
+void ukl_sync(void){
+	extern void __ukl_sync(void);
+	enter_ukl();
+	__ukl_sync();
+	exit_ukl();
+	return;
+}
+
