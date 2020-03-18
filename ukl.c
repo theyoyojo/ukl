@@ -546,6 +546,15 @@ pid_t ukl_getpid(void){
 	return retval;
 }
 
+pid_t ukl_gettid(void){
+	extern pid_t __ukl_gettid(void);
+	pid_t retval;
+	enter_ukl();
+	retval = __ukl_gettid();
+	exit_ukl();
+	return retval;
+}
+
 int ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags){
 	extern int __ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags);
 	int retval;
