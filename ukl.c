@@ -309,11 +309,11 @@ int ukl_set_thread_area(struct user_desc __user *u_info){
 	return retval;
 }
 
-long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off){
-	extern long __ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
-	long retval;
+unsigned long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off){
+	extern unsigned long __ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
+	unsigned long retval;
 	enter_ukl();
-enter_ukl();	retval = __ukl_mmap(addr, len, prot, flags, fd, off);
+	retval = __ukl_mmap(addr, len, prot, flags, fd, off);
 	exit_ukl();
 	//printk("MMAP:\taddr = 0x%lx\tlen = 0x%lx\n", retval, len);
 	return retval;
