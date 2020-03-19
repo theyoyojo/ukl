@@ -8,7 +8,12 @@
 #include <stdlib.h>
 #include <dirent.h>
 
-int kmain(void){
+extern long ukl_mkdir(const char *pathname, mode_t mode);
+extern int ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data);
+extern void ukl_sync(void);
+extern int printk(const char *fmt, ...);
+
+int fsbringup(void){
 
 	// Building and Mounting tmpfs
 
@@ -35,9 +40,9 @@ int kmain(void){
 	} else {
 		printk("mount successful!\n");
 	}
-
+/*
 	// Copying files from /dev/root/ukl to tmpfs
-
+	
 	FILE *fptr;
 	FILE *source, *target;
 	char ch;
@@ -80,7 +85,7 @@ int kmain(void){
 	fclose(target);
 	
 	ukl_sync();
-
+*/
 	return 0;
 	
 }

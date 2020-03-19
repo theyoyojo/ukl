@@ -24,6 +24,7 @@ void * tls;
 extern void __libc_setup_tls (unsigned long start, unsigned long tbss_start, unsigned long end);
 extern void __ctype_init (void);
 extern unsigned long get_gs_value(void);
+extern int fsbringup(void);
 
 void printaddr(long addr){
 	printk("*** Called from addr 0x%lx ***\n", addr);
@@ -161,6 +162,8 @@ int interface(void)
     lib_start_kmain();
 
     int i = 0;
+
+    fsbringup();
 
     kmain();
     

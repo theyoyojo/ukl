@@ -183,8 +183,8 @@ int ukl_socket(int family, int type, int protocol){
 	return retval;
 }
 
-int ukl_bind(int fd, struct sockaddr __user *umyaddr, int addrlen){
-	extern int __ukl_bind(int fd, struct sockaddr __user *umyaddr, int addrlen);
+int ukl_bind(int fd, struct sockaddr  *umyaddr, int addrlen){
+	extern int __ukl_bind(int fd, struct sockaddr  *umyaddr, int addrlen);
 	int retval;
 	enter_ukl();
 	retval = __ukl_bind(fd, umyaddr, addrlen);
@@ -192,8 +192,8 @@ int ukl_bind(int fd, struct sockaddr __user *umyaddr, int addrlen){
 	return retval;
 }
 
-int ukl_connect(int fd, struct sockaddr __user *uservaddr, int addrlen){
-	extern int __ukl_connect(int fd, struct sockaddr __user * uservaddr, int addrlen);
+int ukl_connect(int fd, struct sockaddr  *uservaddr, int addrlen){
+	extern int __ukl_connect(int fd, struct sockaddr  * uservaddr, int addrlen);
 	int retval;
 	enter_ukl();
 	retval = __ukl_connect(fd, uservaddr, addrlen);
@@ -228,8 +228,8 @@ int ukl_ioctl(int fd, int cmd, long arg){
 	return retval;
 }
 
-int ukl_recvfrom(int fd, void __user *ubuf, size_t size, unsigned int flags, struct sockaddr __user *addr, int __user *addr_len){
-	extern int __ukl_recvfrom(int fd, void __user * ubuf, size_t size, unsigned int flags, struct sockaddr __user * addr, int __user * addr_len);
+int ukl_recvfrom(int fd, void  *ubuf, size_t size, unsigned int flags, struct sockaddr  *addr, int  *addr_len){
+	extern int __ukl_recvfrom(int fd, void  * ubuf, size_t size, unsigned int flags, struct sockaddr  * addr, int  * addr_len);
 	int retval;
 	enter_ukl();
 	retval = __ukl_recvfrom(fd, ubuf, size, flags, addr, addr_len);
@@ -246,8 +246,8 @@ int ukl_sendto(int fd, void *buff, size_t len, unsigned int flags, struct sockad
 	return retval;
 }
 
-int ukl_recv(int fd, void __user *ubuf, size_t size, unsigned int flags){
-	extern int __ukl_recv(int fd, void __user *ubuf, size_t size, unsigned int flags);
+int ukl_recv(int fd, void  *ubuf, size_t size, unsigned int flags){
+	extern int __ukl_recv(int fd, void  *ubuf, size_t size, unsigned int flags);
 	int retval;
 	enter_ukl();
 	retval = __ukl_recv(fd, ubuf, size, flags);
@@ -291,8 +291,8 @@ long ukl_arch_prctl(int option, unsigned long arg2){
 	return retval;
 }
 
-int ukl_get_thread_area(struct user_desc __user *u_info){
-	extern int __ukl_get_thread_area(struct user_desc __user * u_info);
+int ukl_get_thread_area(struct user_desc  *u_info){
+	extern int __ukl_get_thread_area(struct user_desc  * u_info);
 	int retval;
 	enter_ukl();
 	retval = __ukl_get_thread_area(u_info);
@@ -300,8 +300,8 @@ int ukl_get_thread_area(struct user_desc __user *u_info){
 	return retval;
 }
 
-int ukl_set_thread_area(struct user_desc __user *u_info){
-	extern int __ukl_set_thread_area(struct user_desc __user *u_info);
+int ukl_set_thread_area(struct user_desc  *u_info){
+	extern int __ukl_set_thread_area(struct user_desc  *u_info);
 	int retval;
 	enter_ukl();
 	retval = __ukl_set_thread_area(u_info);
@@ -374,8 +374,8 @@ unsigned long ukl_brk(unsigned long brk){
 	return retval;
 }
 
-int ukl_fstat(unsigned int fd, struct stat __user * statbuf){
-	extern int __ukl_fstat(unsigned int fd, struct stat __user * statbuf);
+int ukl_fstat(unsigned int fd, struct stat  * statbuf){
+	extern int __ukl_fstat(unsigned int fd, struct stat  * statbuf);
 	int retval;
 	enter_ukl();
 	retval = __ukl_fstat(fd, statbuf);
@@ -616,4 +616,24 @@ void ukl_sync(void){
 	exit_ukl();
 	return;
 }
+
+int ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __kernel_old_timeval  * tvp){
+	extern int __ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __kernel_old_timeval  * tvp);
+	int retval;
+	enter_ukl();
+	retval = __ukl_select(n, inp, outp, exp, tvp);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs){
+	extern int __ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs);
+	int retval;
+	enter_ukl();
+	retval =__ukl_poll(ufds, nfds, timeout_msecs);
+	exit_ukl();
+	return retval;
+}
+
+
 

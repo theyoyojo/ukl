@@ -7,7 +7,7 @@ glibc:
 	./extractglibc.sh
 	gcc -c -o addrprint.o addrprint.S -mcmodel=kernel -ggdb
 	rm -rf UKL.a
-	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive addrprint.o
+	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive libc.a libpthread.a --no-whole-archive
 
 fstest: glibc
 	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
@@ -17,6 +17,17 @@ fstest: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
+
+lebench: glibc
+	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
+	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
+	make -C ../linux M=$(PWD)
+	ld -r -o lebenchfinal.o fsbringup.o --unresolved-symbols=ignore-all --allow-multiple-definition lebench.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o lebenchfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
+
 test: glibc
 	rm -rf tst*
 	cp /home/fedora/unikernel/build-glibc/glibc/nptl/${case}.c .
