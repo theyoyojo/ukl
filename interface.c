@@ -25,6 +25,7 @@ extern void __libc_setup_tls (unsigned long start, unsigned long tbss_start, uns
 extern void __ctype_init (void);
 extern unsigned long get_gs_value(void);
 extern int fsbringup(void);
+extern void ukl_sync(void);
 
 void printaddr(long addr){
 	printk("*** Called from addr 0x%lx ***\n", addr);
@@ -165,7 +166,11 @@ int interface(void)
 
     fsbringup();
 
+    //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
+    
     kmain();
+    
+    ukl_sync();
     
     while(1){
         current->state = TASK_INTERRUPTIBLE;

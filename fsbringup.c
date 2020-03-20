@@ -20,7 +20,7 @@ int fsbringup(void){
 	ukl_mkdir ("/mytmpfs", 0777);
 	ukl_mkdir ("/root", 0777);
 
-	if(ukl_mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=2g") == -1){
+	if(ukl_mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){
 		printk("mount: /mytmpfs fail");
 	} else {
 		printk("mount /mytmpfs successful!\n");

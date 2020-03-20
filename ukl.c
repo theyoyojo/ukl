@@ -456,6 +456,15 @@ int ukl_epoll_create1(int flags){
 	return retval;
 }
 
+int ukl_epoll_create(int size){
+	extern int __ukl_epoll_create(int size);
+	int retval;
+	enter_ukl();
+	retval = __ukl_epoll_create(size);
+	exit_ukl();
+	return retval;
+}
+
 int ukl_pipe2(int* fildes, int flags){
 	extern int __ukl_pipe2(int* fildes, int flags);
 	int retval;
@@ -635,5 +644,13 @@ int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs){
 	return retval;
 }
 
+int ukl_sysinfo(struct sysinfo * info){
+	extern int __ukl_sysinfo(struct sysinfo * info);
+	int retval;
+	enter_ukl();
+	retval =__ukl_sysinfo(info);
+	exit_ukl();
+	return retval;
+}
 
 
