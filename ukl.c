@@ -653,4 +653,31 @@ int ukl_sysinfo(struct sysinfo * info){
 	return retval;
 }
 
+int ukl_renameat2(int olddfd, const char *oldname, int newdfd, const char *newname, unsigned int flags){
+	extern int __ukl_renameat2(int olddfd, const char *oldname, int newdfd, const char *newname, unsigned int flags);
+        int retval;
+        enter_ukl();
+        retval =__ukl_renameat2(olddfd, oldname, newdfd, newname, flags);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_renameat(int olddfd, const char __user *oldname, int newdfd, const char __user *newname){
+	extern int __ukl_renameat(int olddfd, const char *oldname, int newdfd, const char *newname);
+        int retval;
+        enter_ukl();
+        retval =__ukl_renameat(olddfd, oldname, newdfd, newname);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_rename(const char *oldname, const char *newname){
+	extern int __ukl_rename(const char *oldname, const char *newname);
+        int retval;
+        enter_ukl();
+        retval =__ukl_rename(oldname, newname);
+        exit_ukl();
+        return retval;
+}
+
 

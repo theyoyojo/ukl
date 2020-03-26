@@ -73,6 +73,7 @@ extern int ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struc
 extern int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs);
 extern int ukl_epoll_create(int size);
 extern int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
+extern void ukl_sync(void);
 
 void add_diff_to_sum(struct timespec *result,struct timespec a, struct timespec b)
 {
@@ -1203,7 +1204,7 @@ int lmain(void)
 	/*****************************************/
 	/*               GETPID                  */
 	/*****************************************/
-	
+	/*
 	sleep(60);
 	info.iter = BASE_ITER * 100;
 	info.name = "ref";
@@ -1217,7 +1218,7 @@ int lmain(void)
 	info.iter = BASE_ITER * 100;
 	info.name = "getpid";
 	one_line_test(fp, copy, getpid_test, &info);
-	
+	*/
 
 	
 	/*****************************************/
@@ -1307,7 +1308,7 @@ int lmain(void)
 	/*****************************************/
 
 	/****** SMALL ******/
-	
+	/*
 	file_size = PAGE_SIZE;	
 	printf("file size: %d.\n", file_size);
 	
@@ -1331,9 +1332,9 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "small page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
+	*/
 	/****** MID ******/
-	
+	/*
 	file_size = PAGE_SIZE * 10;
 	printf("file size: %d.\n", file_size);
 	
@@ -1357,9 +1358,9 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "mid page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
+	*/
 	/****** BIG ******/
-	
+	/*
 	file_size = PAGE_SIZE * 1000;	
 	printf("file size: %d.\n", file_size);
 	
@@ -1383,9 +1384,9 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "big page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
+	*/
         /****** HUGE ******/
-	
+	/*
 	file_size = PAGE_SIZE * 10000;	
 	printf("file size: %d.\n", file_size);
 	
@@ -1408,12 +1409,13 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "huge page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
+	*/
 	/*****************************************/
 	/*              WRITE & READ             */
 	/*****************************************/
 
 	/****** SMALL ******/
+	/*
 	fd_count = 10;
 
 	info.iter = BASE_ITER * 10;
@@ -1427,11 +1429,12 @@ int lmain(void)
 	info.iter = BASE_ITER * 10;
 	info.name = "epoll";
 	one_line_test(fp, copy, epoll_test, &info);
-	
+	*/
 
 	/****** BIG ******/
+	
 	fd_count = 1000;
-
+/*
 	info.iter = BASE_ITER;
 	info.name = "select big";
 	one_line_test(fp, copy, select_test, &info);
@@ -1439,7 +1442,7 @@ int lmain(void)
 	info.iter = BASE_ITER;
 	info.name = "poll big";
 	one_line_test(fp, copy, poll_test, &info);
-
+*/
 	info.iter = BASE_ITER;
 	info.name = "epoll big";
 	one_line_test(fp, copy, epoll_test, &info);
@@ -1462,7 +1465,8 @@ int lmain(void)
 	struct timespec *diffTime = calc_diff(&startTime, &endTime);
 	printf("Test took: %ld.%09ld seconds\n",diffTime->tv_sec, diffTime->tv_nsec); 
 	free(diffTime);
-	copytestfile();
+	//copytestfile();
+	ukl_sync();
 	return(0);
 }
 

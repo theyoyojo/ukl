@@ -170,7 +170,7 @@ int interface(void)
     
     kmain();
     
-    ukl_sync();
+    //ukl_sync();
     
     while(1){
         current->state = TASK_INTERRUPTIBLE;
