@@ -680,4 +680,12 @@ int ukl_rename(const char *oldname, const char *newname){
         return retval;
 }
 
+int ukl_getrusage(int who, struct rusage * ru){
+        extern int __ukl_getrusage(int who, struct rusage * ru);
+        int retval;
+        enter_ukl();
+        retval =__ukl_getrusage(who, ru);
+        exit_ukl();
+        return retval;
+}
 
