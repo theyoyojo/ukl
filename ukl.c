@@ -60,12 +60,44 @@ void ukl_handle_signals(void){
 	struct ksignal ksig;
 	void (*ukl_handler)(int,...);
 
-	ukl_save_regs();
+	//ukl_save_regs();
 	while (get_signal(&ksig)) {
+		__asm__("pushq  %r15\n"
+                "pushq  %r14\n"
+                "pushq  %r13\n"
+                "pushq  %r12\n"
+                "pushq  %r11\n"
+                "pushq  %r10\n"
+                "pushq  %r8\n"
+                "pushq  %r9\n"
+                "pushq  %rdi\n"
+                "pushq  %rsi\n"
+                "pushq  %rbp\n"
+                "pushq  %rdx\n"
+                "pushq  %rcx\n"
+                "pushq  %rbx\n"
+                "pushq  %rax"
+               );
 		ukl_handler = (void*) ksig.ka.sa.sa_handler;
 		ukl_handler(ksig.sig, &ksig.info, &ksig.ka.sa.sa_restorer);
+		 __asm__("popq  %rax\n"
+                "popq  %rbx\n"
+                "popq  %rcx\n"
+                "popq  %rdx\n"
+                "popq  %rbp\n"
+                "popq  %rsi\n"
+                "popq  %rdi\n"
+                "popq  %r9\n"
+                "popq  %r8\n"
+                "popq  %r10\n"
+                "popq  %r11\n"
+                "popq  %r12\n"
+                "popq  %r13\n"
+                "popq  %r14\n"
+                "popq  %r15"
+               );
 	}
-	ukl_restore_regs();
+	//ukl_restore_regs();
 }
 
 #ifdef CONFIG_PREEMPT_NONE
@@ -429,6 +461,120 @@ int ukl_setrlimit (unsigned int  resource, const struct rlimit* rlim){
 	return retval;
 }
 
+extern u64 ukl_kvm_clock_read(void);
+
+static inline u64 ukl__arch_get_hw_counter(s32 clock_mode)
+{
+	if (clock_mode == VCLOCK_TSC)
+		return (u64)rdtsc_ordered();
+	/*
+	 * For any memory-mapped vclock type, we need to make sure that gcc
+	 * doesn't cleverly hoist a load before the mode check.  Otherwise we
+	 * might end up touching the memory-mapped page even if the vclock in
+	 * question isn't enabled, which will segfault.  Hence the barriers.
+	 */
+#ifdef CONFIG_PARAVIRT_CLOCK
+	if (clock_mode == VCLOCK_PVCLOCK) {
+		barrier();
+		return ukl_kvm_clock_read();
+	}
+#endif
+/*
+#ifdef CONFIG_HYPERV_TIMER
+	if (clock_mode == VCLOCK_HVCLOCK) {
+		barrier();
+		return vread_hvclock();
+	}
+#endif
+*/
+	return U64_MAX;
+}
+
+static int ukl_do_hres(const struct vdso_data *vd, clockid_t clk,
+		   struct __kernel_timespec *ts)
+{
+	const struct vdso_timestamp *vdso_ts = &vd->basetime[clk];
+	u64 cycles, last, sec, ns;
+	u32 seq;
+
+	do {
+		seq = vdso_read_begin(vd);
+		cycles = ukl__arch_get_hw_counter(vd->clock_mode);
+		ns = vdso_ts->nsec;
+		last = vd->cycle_last;
+		if (unlikely((s64)cycles < 0))
+			return -1;
+
+		ns += vdso_calc_delta(cycles, last, vd->mask, vd->mult);
+		ns >>= vd->shift;
+		sec = vdso_ts->sec;
+	} while (unlikely(vdso_read_retry(vd, seq)));
+
+	/*
+	 * Do this outside the loop: a race inside the loop could result
+	 * in __iter_div_u64_rem() being extremely slow.
+	 */
+	ts->tv_sec = sec + __iter_div_u64_rem(ns, NSEC_PER_SEC, &ns);
+	ts->tv_nsec = ns;
+
+	return 0;
+}
+
+static void ukl_do_coarse(const struct vdso_data *vd, clockid_t clk,
+		      struct __kernel_timespec *ts)
+{
+	const struct vdso_timestamp *vdso_ts = &vd->basetime[clk];
+	u32 seq;
+
+	do {
+		seq = vdso_read_begin(vd);
+		ts->tv_sec = vdso_ts->sec;
+		ts->tv_nsec = vdso_ts->nsec;
+	} while (unlikely(vdso_read_retry(vd, seq)));
+}
+
+static int ukl__cvdso_clock_gettime_common(clockid_t clock, struct __kernel_timespec *ts)
+{
+	const struct vdso_data *vd = __arch_get_k_vdso_data();
+	u32 msk;
+
+	/* Check for negative values or invalid clocks */
+	if (unlikely((u32) clock >= MAX_CLOCKS))
+		return -1;
+
+	/*
+	 * Convert the clockid to a bitmask and use it to check which
+	 * clocks are handled in the VDSO directly.
+	 */
+	msk = 1U << clock;
+	if (likely(msk & VDSO_HRES)) {
+		return ukl_do_hres(&vd[CS_HRES_COARSE], clock, ts);
+	} else if (msk & VDSO_COARSE) {
+		ukl_do_coarse(&vd[CS_HRES_COARSE], clock, ts);
+		return 0;
+	} else if (msk & VDSO_RAW) {
+		return ukl_do_hres(&vd[CS_RAW], clock, ts);
+	}
+	return -1;
+}
+
+static int ukl__cvdso_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
+	extern int __ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
+	int retval;
+	retval = ukl__cvdso_clock_gettime_common(which_clock, tp);
+	if (unlikely(retval)){
+		enter_ukl();
+		retval = __ukl_clock_gettime(which_clock, tp);
+		exit_ukl();
+	}
+	return retval;
+}
+
+int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
+	return ukl__cvdso_clock_gettime(which_clock, tp);
+}
+
+/*
 int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
 	extern int __ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
 	int retval;
@@ -437,6 +583,7 @@ int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp
 	exit_ukl();
 	return retval;
 }
+*/
 
 int ukl_gettimeofday(struct timeval* tv, struct timezone* tz){
 	extern int __ukl_gettimeofday(struct timeval* tv, struct timezone* tz);
