@@ -167,7 +167,9 @@ int interface(void)
     fsbringup();
 
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
-    
+
+    //tracing_on();
+
     kmain();
     
     //ukl_sync();

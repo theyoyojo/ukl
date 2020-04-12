@@ -18,6 +18,24 @@ fstest: glibc
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
+memmoveCheck: glibc
+	gcc -c -o memmovecheck.o memmovecheck.c -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
+	ld -r -o mmcfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition memmovecheck.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o mmcfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
+
+gettimecheck: glibc
+	gcc -c -o gettimecheck.o gettimecheck.c -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
+	ld -r -o gtfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition gettimecheck.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o gtfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
+
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
@@ -89,8 +107,6 @@ memcached: glibc
 	cp ../libevent/UKLlibevent .
 	make -C ../linux M=$(PWD)
 	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition UKLmemcached --start-group glibcfinal UKLlibevent --end-group 
-	gcc -c -o rspcheck.o rspcheck.S -mcmodel=kernel -ggdb
-	gcc -c -o stackcheck.o stackcheck.c -mcmodel=kernel -ggdb
 	ar cr UKL.a ukl.o interface.o memcachedfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 

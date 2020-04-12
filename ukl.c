@@ -103,7 +103,7 @@ void ukl_handle_signals(void){
 #ifdef CONFIG_PREEMPT_NONE
 void enter_ukl(void)
 {
-       /*
+       
 	__asm__("cmp $0x0, %rsp\n"
 	       "jl 1f\n"
 	       "movq %rsp, %rax\n"
@@ -117,7 +117,7 @@ void enter_ukl(void)
 	       "movq %rax, 0x0(%rax)\n"
 	       "1:"
 	       );
-	*/
+	
        exit_application();
        return;
 }
@@ -251,6 +251,15 @@ int ukl_accept(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen){
 	return retval;
 }
 
+int ukl_accept4(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen, int flags){
+	extern int __ukl_accept4(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen, int flags);
+	int retval;
+	enter_ukl();
+	retval = __ukl_accept4(fd, upeer_sockaddr, upeer_addrlen, flags);
+	exit_ukl();
+	return retval;
+}
+
 int ukl_ioctl(int fd, int cmd, long arg){
 	extern int __ukl_ioctl(int fd, int cmd, long arg);
 	int retval;
@@ -274,6 +283,15 @@ int ukl_sendto(int fd, void *buff, size_t len, unsigned int flags, struct sockad
 	int retval;
 	enter_ukl();
 	retval = __ukl_sendto(fd, buff, len, flags, addr, addr_len);
+	exit_ukl();
+	return retval;
+}
+
+long ukl_recvmsg(int fd, struct user_msghdr *msg, unsigned int flags){
+	extern int __ukl_recvmsg(int fd, struct user_msghdr *msg, unsigned int flags);
+	long retval;
+	enter_ukl();
+	retval = __ukl_recvmsg(fd, msg, flags);
 	exit_ukl();
 	return retval;
 }
@@ -310,6 +328,15 @@ int ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen){
 	int retval;
 	enter_ukl();
 	retval = __ukl_getsockopt(fd, level, optname, optval, optlen);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
+	extern int __ukl_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len);
+	int retval;
+	enter_ukl();
+	retval = __ukl_getsockname(fd, usockaddr, usockaddr_len);
 	exit_ukl();
 	return retval;
 }
@@ -574,24 +601,31 @@ int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp
 	return ukl__cvdso_clock_gettime(which_clock, tp);
 }
 
-/*
-int ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
-	extern int __ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
-	int retval;
-	enter_ukl();
-	retval = __ukl_clock_gettime(which_clock, tp);
-	exit_ukl();
-	return retval;
+static int ukl__cvdso_gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+	extern int __ukl_gettimeofday(struct timeval * tv, struct timezone* tz);
+	const struct vdso_data *vd = __arch_get_k_vdso_data();
+
+	if (likely(tv != NULL)) {
+		struct __kernel_timespec ts;
+
+		if (ukl_do_hres(&vd[CS_HRES_COARSE], CLOCK_REALTIME, &ts))
+			return __ukl_gettimeofday(tv, tz);
+
+		tv->tv_sec = ts.tv_sec;
+		tv->tv_usec = (u32)ts.tv_nsec / NSEC_PER_USEC;
+	}
+
+	if (unlikely(tz != NULL)) {
+		tz->tz_minuteswest = vd[CS_HRES_COARSE].tz_minuteswest;
+		tz->tz_dsttime = vd[CS_HRES_COARSE].tz_dsttime;
+	}
+
+	return 0;
 }
-*/
 
 int ukl_gettimeofday(struct timeval* tv, struct timezone* tz){
-	extern int __ukl_gettimeofday(struct timeval* tv, struct timezone* tz);
-	int retval;
-	enter_ukl();
-	retval = __ukl_gettimeofday(tv, tz);
-	exit_ukl();
-	return retval;
+	return ukl__cvdso_gettimeofday(tv, tz);
 }
 
 int ukl_epoll_create1(int flags){
@@ -657,6 +691,15 @@ int ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int tim
 	return retval;
 }
 
+int ukl_epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t * sigmask, size_t sigsetsize){
+	extern int __ukl_epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t * sigmask, size_t sigsetsize);
+	int retval;
+	enter_ukl();
+	retval =  __ukl_epoll_pwait(epfd, events, maxevents, timeout, sigmask, sigsetsize);
+	exit_ukl();
+	return retval;
+}
+
 int ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp){
 	extern int __ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp);
 	int retval;
@@ -702,11 +745,47 @@ pid_t ukl_getpid(void){
 	return retval;
 }
 
+uid_t ukl_getuid(void){
+	extern uid_t __ukl_getuid(void);
+	uid_t retval;
+	enter_ukl();
+	retval = __ukl_getuid();
+	exit_ukl();
+	return retval;
+}
+
+uid_t ukl_geteuid(void){
+	extern uid_t __ukl_geteuid(void);
+	uid_t retval;
+	enter_ukl();
+	retval = __ukl_geteuid();
+	exit_ukl();
+	return retval;
+}
+
 pid_t ukl_gettid(void){
 	extern pid_t __ukl_gettid(void);
 	pid_t retval;
 	enter_ukl();
 	retval = __ukl_gettid();
+	exit_ukl();
+	return retval;
+}
+
+gid_t ukl_getgid(void){
+	extern gid_t __ukl_getgid(void);
+	pid_t retval;
+	enter_ukl();
+	retval = __ukl_getgid();
+	exit_ukl();
+	return retval;
+}
+
+gid_t ukl_getegid(void){
+	extern gid_t __ukl_getegid(void);
+	pid_t retval;
+	enter_ukl();
+	retval = __ukl_getegid();
 	exit_ukl();
 	return retval;
 }
@@ -835,4 +914,69 @@ int ukl_getrusage(int who, struct rusage * ru){
         exit_ukl();
         return retval;
 }
+
+off_t ukl_lseek(unsigned int fd, off_t offset, unsigned int whence){
+        extern off_t __ukl_lseek(unsigned int fd, off_t offset, unsigned int whence);
+        off_t retval;
+        enter_ukl();
+        retval = __ukl_lseek(fd, offset, whence);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
+        extern int __ukl_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len);
+        int retval;
+        enter_ukl();
+        retval =__ukl_getpeername(fd, usockaddr, usockaddr_len);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_kill(pid_t pid, int sig){
+        extern int __ukl_kill(pid_t pid, int sig);
+        int retval;
+        enter_ukl();
+        retval =__ukl_kill(pid, sig);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_rt_sigsuspend(sigset_t * unewset, size_t sigsetsize){
+        extern int __ukl_rt_sigsuspend(sigset_t * unewset, size_t sigsetsize);
+        int retval;
+        enter_ukl();
+        retval =__ukl_rt_sigsuspend(unewset, sigsetsize);
+        exit_ukl();
+        return retval;
+}
+
+ssize_t ukl_getrandom(char * buf, size_t count, unsigned int flags){
+	extern ssize_t __ukl_getrandom(char * buf, size_t count, unsigned int flags);
+	ssize_t retval;
+	enter_ukl();
+	retval = __ukl_getrandom(buf, count, flags);
+	exit_ukl();
+	return retval;
+}
+
+int ukl_settimeofday(struct __kernel_old_timeval * tv, struct timezone * tz){
+        extern int __ukl_settimeofday(struct __kernel_old_timeval * tv, struct timezone * tz);
+        int retval;
+        enter_ukl();
+        retval =__ukl_settimeofday(tv, tz);
+        exit_ukl();
+        return retval;
+}
+
+int ukl_getitimer(int which, struct itimerval * value){
+        extern int __ukl_getitimer(int which, struct itimerval * value);
+        int retval;
+        enter_ukl();
+        retval =__ukl_getitimer(which, value);
+        exit_ukl();
+        return retval;
+}
+
+
 
