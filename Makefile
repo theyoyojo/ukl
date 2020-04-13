@@ -151,11 +151,20 @@ singlethreaded-tcp-server: glibc
 
 tuFS: glibc
 	gcc tuFS.c -c -o tuFS.o -mcmodel=kernel -ggdb
-	make -C ../linux CC="ccache gcc" M=$(PWD)
-	ld -r -o tuFSp.o --unresolved-symbols=ignore-all --allow-multiple-definition tuFS.o --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o interface.o tuFSp.o 
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
-	rm -rf ../linux/vmlinux 
+	make -C ../linux M=$(PWD)
+	ld -r -o tuFSp.o --unresolved-symbols=ignore-all --allow-multiple-definition tuFS.o --start-group glibcfinal --end-group
+	ar cr UKL.a ukl.o interface.o tuFSp.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
+	rm -rf ../linux/vmlinux
+	make -C ../linux -j$(shell nproc)
+
+tuPPID: glibc
+	gcc TU_PPID.c -c -o TU_PPID.o -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
+	ld -r -o TU_PPIDp.o --unresolved-symbols=ignore-all --allow-multiple-definition TU_PPID.o --start-group glibcfinal --end-group
+	ar cr UKL.a ukl.o interface.o TU_PPIDp.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
+	rm -rf ../linux/vmlinux
 	make -C ../linux -j$(shell nproc)
 
 run:
