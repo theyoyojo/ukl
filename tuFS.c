@@ -5,9 +5,10 @@
 #include <dirent.h>
 #include <stdio.h>
 
+#include <dirent.h>
+
 #define main kmain
 #define printf printk
-
 int write_file(){
   char file_path[] = "/hi.txt";
   int writer_fd;
@@ -45,10 +46,32 @@ void read_file(int len){
   printf("File holds: %s\n", content);
 }
 
+int print_files(void)
+{
+  printf("in main\n");
+  DIR *d;
+  struct dirent *dir;
+
+  d = opendir("/myfile.txt");
+  if (d == 0){
+    printf("failed to open\n");
+  }
+  if (d) {
+      while ((dir = readdir(d)) != NULL) {
+          printf("%s\n", dir->d_name);
+        }
+      closedir(d);
+    }
+  printf("done main\n");
+  return(0);
+}
+
 int main(int argc, char *argv[])
 {
-
   int len = write_file();
   read_file(len);
+
+  read_file(14);
+  print_files();
   return 0;
 }
