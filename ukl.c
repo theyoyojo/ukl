@@ -18,51 +18,13 @@
  */
 #include <linux/ukl.h>
 
-void ukl_save_regs(void){
-	__asm__("pushq	%r15\n"
-		"pushq	%r14\n"
-		"pushq	%r13\n"
-		"pushq	%r12\n"
-		"pushq	%r11\n"
-		"pushq	%r10\n"
-		"pushq	%r8\n"
-		"pushq	%r9\n"
-		"pushq	%rdi\n"
-		"pushq	%rsi\n"
-		"pushq	%rbp\n"
-		"pushq	%rdx\n"
-		"pushq	%rcx\n"
-		"pushq	%rbx\n"
-		"pushq	%rax"
-               );
-}
-
-void ukl_restore_regs(void){
-	__asm__("popq  %rax\n"
-                "popq  %rbx\n"
-                "popq  %rcx\n"
-                "popq  %rdx\n"
-                "popq  %rbp\n"
-                "popq  %rsi\n"
-                "popq  %rdi\n"
-                "popq  %r9\n"
-                "popq  %r8\n"
-                "popq  %r10\n"
-                "popq  %r11\n"
-                "popq  %r12\n"
-                "popq  %r13\n"
-                "popq  %r14\n"
-		"popq  %r15"
-	       );
-}
 
 void ukl_handle_signals(void){
 	struct ksignal ksig;
 	void (*ukl_handler)(int,...);
 
-	//ukl_save_regs();
 	while (get_signal(&ksig)) {
-		__asm__("pushq  %r15\n"
+		/*__asm__("pushq  %r15\n"
                 "pushq  %r14\n"
                 "pushq  %r13\n"
                 "pushq  %r12\n"
@@ -77,10 +39,10 @@ void ukl_handle_signals(void){
                 "pushq  %rcx\n"
                 "pushq  %rbx\n"
                 "pushq  %rax"
-               );
+               );*/
 		ukl_handler = (void*) ksig.ka.sa.sa_handler;
 		ukl_handler(ksig.sig, &ksig.info, &ksig.ka.sa.sa_restorer);
-		 __asm__("popq  %rax\n"
+		/* __asm__("popq  %rax\n"
                 "popq  %rbx\n"
                 "popq  %rcx\n"
                 "popq  %rdx\n"
@@ -95,15 +57,14 @@ void ukl_handle_signals(void){
                 "popq  %r13\n"
                 "popq  %r14\n"
                 "popq  %r15"
-               );
+               );*/
 	}
-	//ukl_restore_regs();
 }
 
 #ifdef CONFIG_PREEMPT_NONE
 void enter_ukl(void)
 {
-       
+ 	/*      
 	__asm__("cmp $0x0, %rsp\n"
 	       "jl 1f\n"
 	       "movq %rsp, %rax\n"
@@ -117,7 +78,7 @@ void enter_ukl(void)
 	       "movq %rax, 0x0(%rax)\n"
 	       "1:"
 	       );
-	
+	*/
        exit_application();
        return;
 }
@@ -978,5 +939,12 @@ int ukl_getitimer(int which, struct itimerval * value){
         return retval;
 }
 
-
+long ukl_sendmsg(int fd, struct user_msghdr* msg, unsigned int flags){
+	extern long __ukl_sendmsg(int fd, struct user_msghdr* msg, unsigned int flags);
+        int retval;
+        enter_ukl();
+        retval = __ukl_sendmsg(fd, msg, flags);
+        exit_ukl();
+        return retval;
+}
 
