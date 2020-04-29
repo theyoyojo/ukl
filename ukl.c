@@ -697,6 +697,15 @@ int ukl_tgkill(pid_t tgid, pid_t pid, int sig){
 	return retval;
 }
 
+pid_t ukl_getppid(void){
+	extern pid_t __ukl_getppid(void);
+	pid_t retval;
+	enter_ukl();
+	retval = __ukl_getppid();
+	exit_ukl();
+	return retval;
+}
+
 pid_t ukl_getpid(void){
 	extern pid_t __ukl_getpid(void);
 	pid_t retval;
