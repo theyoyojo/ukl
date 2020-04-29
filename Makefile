@@ -99,7 +99,7 @@ uklfutex: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
-	
+
 memcached: glibc
 	rm -f UKLmemcached
 	rm -f UKLlibevent
@@ -158,14 +158,18 @@ tuFS: glibc
 	rm -rf ../linux/vmlinux
 	make -C ../linux -j$(shell nproc)
 
-tuPPID: glibc
-	gcc TU_PPID.c -c -o TU_PPID.o -mcmodel=kernel -ggdb
-	make -C ../linux M=$(PWD)
-	ld -r -o TU_PPIDp.o --unresolved-symbols=ignore-all --allow-multiple-definition TU_PPID.o --start-group glibcfinal --end-group
-	ar cr UKL.a ukl.o interface.o TU_PPIDp.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
-	rm -rf ../linux/vmlinux
-	make -C ../linux -j$(shell nproc)
+ppid_test: glibc
+	time gcc -Wall ppid_test.c -c -o ppid_test.o -mcmodel=kernel -ggdb
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux M=$(PWD)
+# time make -C ../linux M=$(PWD)
+	time ld -r -o ppid_testp.o --unresolved-symbols=ignore-all --allow-multiple-definition ppid_test.o --start-group glibcfinal --end-group
+	time ar cr UKL.a ukl.o interface.o ppid_testp.o
+	time rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
+	time rm -rf ../linux/vmlinux
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j $(nproc)
+# time make -C ../linux -j$(shell nproc)
+# mv bzImage here as tuPPID
+
 
 run:
 	make -C ../min-initrd runU

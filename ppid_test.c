@@ -26,10 +26,14 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#define main kmain
+/* #define main kmain */
 #define printf printk
 
 #define NUM_SAMPLES 50
+
+extern int printk(const char *fmt, ...);
+extern pid_t ukl_getpid(void);
+extern pid_t ukl_getppid(void);
 
 struct timespec *calc_diff(struct timespec *smaller, struct timespec *bigger)
 {
@@ -69,7 +73,11 @@ void add_diff_to_sum(struct timespec *result,struct timespec a, struct timespec 
 void getppid_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	syscall(SYS_getppid);
+  // XXX: change back to ppid
+	/* ukl_getppid(); */
+	ukl_getppid();
+	/* ukl_getpid(); */
+	/* syscall(SYS_getppid); */
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
@@ -80,10 +88,6 @@ void run_test(){
 	clock_gettime(CLOCK_MONOTONIC,&testStart);
 
 	printf("Performing get_ppid test \n");
-
-	printf("Dropping into debug loop\n");
-  int db = 1;
-  while (db);
 	printf("Total test iteration %d.\n", NUM_SAMPLES);
 
 	struct timespec* timeArray = (struct timespec *)
@@ -112,7 +116,7 @@ void run_test(){
 	free(timeArray);
 }
 
-int main(int argc, char *argv[])
+int lmain(int argc, char *argv[])
 {
   printf("Running ppid test\n");
 
@@ -121,4 +125,15 @@ int main(int argc, char *argv[])
   while(1);
   return 0;
 
+}
+
+int kmain(void){
+  pthread_t thk;
+  if (pthread_create (&thk, NULL, lmain, NULL) != 0)
+    {
+      printf("testmain create failed");
+      return 1;
+    }
+
+  return 0;
 }
