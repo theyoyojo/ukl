@@ -27,6 +27,8 @@ extern unsigned long get_gs_value(void);
 extern int fsbringup(void);
 extern void ukl_sync(void);
 
+void splash_screen(void);
+
 void printaddr(long addr){
 	printk("*** Called from addr 0x%lx ***\n", addr);
 }
@@ -156,6 +158,41 @@ void setup_networking(void){
     printk("Set up of network interface, done.\n");
 }
 
+// Bold Cyan
+#define UU "\033[1;36m"
+// Bold Magenta
+#define KK "\033[1;35m"
+// Bold RED
+#define LL "\033[1;31m"
+// Bold Blue
+#define BG "\033[0;34m"
+// Reset
+#define RS "\033[0m"
+
+void splash_screen(void){
+  // Give things a chance to settle down.
+  msleep(300);
+
+  // I don't know why this can't be done in a single string.
+  char *ukl_splash =
+  BG"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" \
+  BG" ~~"UU"/\\\\\\"BG"~~~~~~~~"UU"/\\\\\\"BG"~~"      KK"/\\\\\\"BG"~~~~~~~~"KK"/\\\\\\"BG"~~"  LL"/\\\\\\"BG"~~~~~~~~~~~~~\n" \
+    "  ~"UU"\\/\\\\\\"BG"~~~~~~~"UU"\\/\\\\\\"BG"~"    KK"\\/\\\\\\"BG"~~~~~"KK"/\\\\\\//"BG"~~" LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n" \
+    "   ~"UU"\\/\\\\\\"BG"~~~~~~~"UU"\\/\\\\\\"BG"~"   KK"\\/\\\\\\"BG"~~"KK"/\\\\\\//"BG"~~~~~" LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n" \
+    "    ~"UU"\\/\\\\\\"BG"~~~~~~~"UU"\\/\\\\\\"BG"~"  KK"\\/\\\\\\\\\\\\//\\\\\\"BG"~~~~~"      LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n" \
+    "     ~"UU"\\/\\\\\\"BG"~~~~~~~"UU"\\/\\\\\\"BG"~" KK"\\/\\\\\\//"BG"~"KK"\\//\\\\\\"BG"~~~~"LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n" \
+    "      ~"UU"\\/\\\\\\"BG"~~~~~~~"UU"\\/\\\\\\"BG"~"KK"\\/\\\\\\"BG"~~~~"KK"\\//\\\\\\"BG"~~~"LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n";
+  char *ukl_splash2 =
+    "       ~"UU"\\//\\\\\\"BG"~~~~~~"UU"/\\\\\\"BG"~~"KK"\\/\\\\\\"BG"~~~~~"KK"\\//\\\\\\"BG"~~"LL"\\/\\\\\\"BG"~~~~~~~~~~~~~\n";
+  char *ukl_splash3 =
+    "        ~~"UU"\\///\\\\\\\\\\\\\\\\\\/"BG"~~~"    KK"\\/\\\\\\"BG"~~~~~~"KK"\\//\\\\\\"BG"~"LL"\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\"BG"~~\n" \
+    "         ~~~~"UU"\\/////////"BG"~~~~~"            KK"\\///"BG"~~~~~~~~"KK"\\///"BG"~~"      LL"\\//////////////"BG"~~~\n" \
+    "          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
+  printk("%s", ukl_splash);
+  printk("%s", ukl_splash2);
+  printk("%s"RS"\n", ukl_splash3);
+}
+
 int interface(void)
 {
     setup_mm();
@@ -169,6 +206,9 @@ int interface(void)
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
     //tracing_on();
+    int splash = 1;
+    if(splash)
+      splash_screen();
 
     kmain();
     
