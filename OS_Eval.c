@@ -65,6 +65,7 @@ extern int printk(const char *fmt, ...);
 #define printf printk
 
 extern pid_t ukl_getpid(void);
+extern pid_t ukl_getppid(void);
 extern ssize_t ukl_read(int fd, const void* buf, size_t count);
 extern ssize_t ukl_write(int fd, const void* buf, size_t count);
 extern unsigned long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
@@ -522,6 +523,16 @@ void getpid_test(struct timespec *diffTime) {
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
 
+}
+
+void getppid_test(struct timespec *diffTime) {
+	struct timespec startTime, endTime;
+	clock_gettime(CLOCK_MONOTONIC, &startTime);
+	//syscall(SYS_getppid);
+  ukl_getppid();
+	clock_gettime(CLOCK_MONOTONIC, &endTime);
+	add_diff_to_sum(diffTime, endTime, startTime);
+	return;
 }
 
 int file_size = -1;
@@ -1206,8 +1217,7 @@ int lmain(void)
 	/*****************************************/
 	/*               GETPID                  */
 	/*****************************************/
-	
-	sleep(60);
+
 	info.iter = BASE_ITER * 100;
 	info.name = "ref";
 	one_line_test(fp, copy, ref_test, &info);
@@ -1216,6 +1226,9 @@ int lmain(void)
 	info.name = "cpu";
 	one_line_test(fp, copy, cpu_test, &info);
 
+	info.iter = BASE_ITER * 100;
+	info.name = "getppid";
+	one_line_test(fp, copy, getppid_test, &info);
 
 	info.iter = BASE_ITER * 100;
 	info.name = "getpid";
