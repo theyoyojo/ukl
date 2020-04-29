@@ -149,11 +149,11 @@ singlethreaded-tcp-server: glibc
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
-tuFS: glibc
-	gcc tuFS.c -c -o tuFS.o -mcmodel=kernel -ggdb
+fs_test: glibc
+	gcc fs_test.c -c -o fs_test.o -mcmodel=kernel -ggdb
 	make -C ../linux M=$(PWD)
-	ld -r -o tuFSp.o --unresolved-symbols=ignore-all --allow-multiple-definition tuFS.o --start-group glibcfinal --end-group
-	ar cr UKL.a ukl.o interface.o tuFSp.o
+	ld -r -o fs_testp.o --unresolved-symbols=ignore-all --allow-multiple-definition fs_test.o --start-group glibcfinal --end-group
+	ar cr UKL.a ukl.o interface.o fs_test.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
 	rm -rf ../linux/vmlinux
 	make -C ../linux -j$(shell nproc)
