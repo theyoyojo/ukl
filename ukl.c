@@ -18,50 +18,21 @@
  */
 #include <linux/ukl.h>
 
+#define DONTALWAYSPUSH 1
 
-void ukl_handle_signals(void){
-	struct ksignal ksig;
-	void (*ukl_handler)(int,...);
+extern void enter_from_user_mode(void);
+extern void entry_SYSCALL_64(void);
+extern void syscall_return_slowpath(void *regs);
+extern void* get_current_top_of_stack(void);
 
-	while (get_signal(&ksig)) {
-		/*__asm__("pushq  %r15\n"
-                "pushq  %r14\n"
-                "pushq  %r13\n"
-                "pushq  %r12\n"
-                "pushq  %r11\n"
-                "pushq  %r10\n"
-                "pushq  %r8\n"
-                "pushq  %r9\n"
-                "pushq  %rdi\n"
-                "pushq  %rsi\n"
-                "pushq  %rbp\n"
-                "pushq  %rdx\n"
-                "pushq  %rcx\n"
-                "pushq  %rbx\n"
-                "pushq  %rax"
-               );*/
-		ukl_handler = (void*) ksig.ka.sa.sa_handler;
-		ukl_handler(ksig.sig, &ksig.info, &ksig.ka.sa.sa_restorer);
-		/* __asm__("popq  %rax\n"
-                "popq  %rbx\n"
-                "popq  %rcx\n"
-                "popq  %rdx\n"
-                "popq  %rbp\n"
-                "popq  %rsi\n"
-                "popq  %rdi\n"
-                "popq  %r9\n"
-                "popq  %r8\n"
-                "popq  %r10\n"
-                "popq  %r11\n"
-                "popq  %r12\n"
-                "popq  %r13\n"
-                "popq  %r14\n"
-                "popq  %r15"
-               );*/
-	}
-}
+#define EXIT_TO_USERMODE_LOOP_FLAGS				\
+	(_TIF_SIGPENDING | _TIF_NOTIFY_RESUME | _TIF_UPROBE |	\
+	 _TIF_NEED_RESCHED | _TIF_USER_RETURN_NOTIFY | _TIF_PATCH_PENDING)
 
-#ifdef CONFIG_PREEMPT_NONE
+#define SYSCALL_EXIT_WORK_FLAGS				\
+	(_TIF_SYSCALL_TRACE | _TIF_SYSCALL_AUDIT |	\
+	 _TIF_SINGLESTEP | _TIF_SYSCALL_TRACEPOINT)
+
 void enter_ukl(void)
 {
  	/*      
@@ -79,22 +50,60 @@ void enter_ukl(void)
 	       "1:"
 	       );
 	*/
+	
+	struct thread_info *ti = current_thread_info();
+	u32 cached_flags;
+	
+	long unsigned int myrsp;
+        asm("\t movq %%rsp,%0" : "=r"(myrsp));
+
+        if(myrsp < 0x800000000000){
+                local_irq_disable();
+		cached_flags = READ_ONCE(ti->flags);
+#ifdef DONTALWAYSPUSH
+		if (unlikely(cached_flags & EXIT_TO_USERMODE_LOOP_FLAGS) || unlikely(cached_flags & SYSCALL_EXIT_WORK_FLAGS)){
+#endif
+			entry_SYSCALL_64();
+#ifdef DONTALWAYSPUSH
+		}
+#endif
+		enter_from_user_mode();
+		local_irq_enable();
+        }
+
+#ifdef CONFIG_PREEMPT_NONE
        exit_application();
+#endif
        return;
 }
 
 void exit_ukl(void)
 {
-       enter_application();
-       ukl_handle_signals();
-       cond_resched();
-}
-#else
-#define enter_ukl()    do {} while(0)
-#define exit_ukl()     do {} while(0)
+    struct thread_info *ti = current_thread_info();
+    u32 cached_flags;
+
+    void* krsp;
+    long unsigned int myrsp;
+    asm("\t movq %%rsp,%0" : "=r"(myrsp));
+    
+    if(myrsp < 0x800000000000){
+       cached_flags = READ_ONCE(ti->flags);
+#ifdef DONTALWAYSPUSH
+       if (unlikely(cached_flags & EXIT_TO_USERMODE_LOOP_FLAGS) || unlikely(cached_flags & SYSCALL_EXIT_WORK_FLAGS)){
 #endif
+	       krsp = get_current_top_of_stack();
+#ifdef DONTALWAYSPUSH
+       }else{
+	       krsp = NULL;
+       }
+#endif
+       syscall_return_slowpath(krsp);
+    }
 
-
+#ifdef CONFIG_PREEMPT_NONE
+    enter_application();
+#endif
+}
 
 void printukl(const char *fmt, ...) {
 	static char buf[1024];
