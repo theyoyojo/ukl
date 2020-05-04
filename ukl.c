@@ -18,7 +18,7 @@
  */
 #include <linux/ukl.h>
 
-#define DONTALWAYSPUSH 1
+#undef DONTALWAYSPUSH
 
 extern void enter_from_user_mode(void);
 extern void entry_SYSCALL_64(void);
