@@ -20,7 +20,8 @@
 
 #undef DONTALWAYSPUSH
 
-extern void enter_from_user_mode(void);
+void __attribute__((weak)) enter_from_user_mode(void){}
+//extern void enter_from_user_mode(void);
 extern void entry_SYSCALL_64(void);
 extern void syscall_return_slowpath(void *regs);
 extern void* get_current_top_of_stack(void);
