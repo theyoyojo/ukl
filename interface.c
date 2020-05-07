@@ -53,7 +53,8 @@ void __copy_tls(void * dest, void * src, size_t n, size_t m){
 void setup_mm(void){
     struct task_struct *me = current;
     
-    me->mm = mm_alloc();
+    me->mm = me->active_mm;
+    //me->mm = mm_alloc();
     me->mm->get_unmapped_area = arch_get_unmapped_area_topdown;
     me->mm->mmap_base = 0x7f0000000000; 
     me->mm->mmap_legacy_base = 0x300000000000;
@@ -61,7 +62,6 @@ void setup_mm(void){
     me->mm->start_brk = 0x405000;
     me->mm->brk = 0x405000;
 
-    me->active_mm = me->mm;
 
     printk("thread_info->flags = %lx\n", me->thread_info.flags);
 
