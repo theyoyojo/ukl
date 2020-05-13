@@ -18,8 +18,6 @@
  */
 #include <linux/ukl.h>
 
-#undef DONTALWAYSPUSH
-
 void __attribute__((weak)) enter_from_user_mode(void){}
 //extern void enter_from_user_mode(void);
 extern void entry_SYSCALL_64(void);
@@ -61,13 +59,7 @@ void enter_ukl(void)
         if(myrsp < 0x800000000000){
                 local_irq_disable();
 		cached_flags = READ_ONCE(ti->flags);
-#ifdef DONTALWAYSPUSH
-		if (unlikely(cached_flags & EXIT_TO_USERMODE_LOOP_FLAGS) || unlikely(cached_flags & SYSCALL_EXIT_WORK_FLAGS)){
-#endif
-			entry_SYSCALL_64();
-#ifdef DONTALWAYSPUSH
-		}
-#endif
+		entry_SYSCALL_64();
 		enter_from_user_mode();
 		local_irq_enable();
         }
@@ -89,15 +81,7 @@ void exit_ukl(void)
     
     if(myrsp < 0x800000000000){
        cached_flags = READ_ONCE(ti->flags);
-#ifdef DONTALWAYSPUSH
-       if (unlikely(cached_flags & EXIT_TO_USERMODE_LOOP_FLAGS) || unlikely(cached_flags & SYSCALL_EXIT_WORK_FLAGS)){
-#endif
-	       krsp = get_current_top_of_stack();
-#ifdef DONTALWAYSPUSH
-       }else{
-	       krsp = NULL;
-       }
-#endif
+       krsp = get_current_top_of_stack();
        syscall_return_slowpath(krsp);
     }
 
