@@ -12,14 +12,14 @@
 #define PORT 5555
 #define BUFFER_SIZE 1024
 
-void *connection_handler(void);
+void *connection_handler(void*);
 
 #define printff printk
 
-int client_fd;
 
 int kmain(int argc, char *argv[]){
 
+	int client_fd;
 	int opt_val = 1;
 	int retval, curr_id = 0;
 	int server_fd;
@@ -55,7 +55,7 @@ int kmain(int argc, char *argv[]){
 	while (client_fd = accept(server_fd, (struct sockaddr *)&client, &client_len)){
 	// client_fd = accept(server_fd, (struct sockaddr *)&client, &client_len);
 		printff("Connection accepted.\n");
-		if (pthread_create( &thread_id[curr_id] , NULL , connection_handler , (void*) &client_fd) < 0) {
+		if (pthread_create( &thread_id[curr_id] , NULL , connection_handler , (void*) client_fd) < 0) {
 				perror("could not create thread");
 				return 1;
 		}
@@ -65,9 +65,9 @@ int kmain(int argc, char *argv[]){
 	return 0;
 }
 
-void *connection_handler(void)
+void *connection_handler(void* cfd)
 {
-    // int client_fd = *(int*)c_fd;
+    int client_fd = (int)cfd;
     int buf_len, retval;
     char *message , buf[BUFFER_SIZE];
     int i = 0;

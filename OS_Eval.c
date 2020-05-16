@@ -243,6 +243,8 @@ struct timespec *calc_k_closest(struct timespec *timeArray, int size)
 
 }
 
+extern void dump_unreclaimable_slab(void);
+
 void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *info){
 	struct timespec testStart, testEnd;
 	clock_gettime(CLOCK_MONOTONIC,&testStart);
@@ -254,7 +256,11 @@ void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *
 
 	struct timespec* timeArray = (struct timespec *)malloc(sizeof(struct timespec) * runs);
 	for (int i=0; i < runs; i++) {
-		//printk("Run = %d || ", i);
+		printk("Run = %d\n", i);
+		/*printf("test i = %d\n", i);
+		if(i == 662){
+			dump_unreclaimable_slab();
+		}*/
 		timeArray[i].tv_sec = 0;
 		timeArray[i].tv_nsec = 0;
 		(*f)(&timeArray[i]);
@@ -514,10 +520,11 @@ void threadTest(struct timespec *childTime, struct timespec *parentTime)
 }
 
 void getpid_test(struct timespec *diffTime) {
+	int p;
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 	//syscall(SYS_getpid);
-	ukl_getpid();
+	p = ukl_getpid();
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
@@ -575,22 +582,30 @@ void read_warmup() {
 }
 void write_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
-
-	char *buf = (char *) malloc (sizeof(char) * file_size);
+	char *buf;
+	buf = (char *) malloc (sizeof(char) * file_size);
+	printk("write_test 1: chunk = 0x%lx\n", *(buf-0x8));
+	printk("buf = 0x%lx\n", buf);
 	for (int i = 0; i < file_size; i++) {
 		buf[i] = 'a';
 	}
+	printk("write_test 2: chunk = 0x%lx\n", *(buf-0x8));
 	int fd = open("/mytmpfs/test_file.txt", O_CREAT | O_WRONLY);
 	if (fd < 0) printf("invalid fd in write: %d\n", fd);
+	printk("write_test 3: chunk = 0x%lx\n", *(buf-0x8));
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
+	printk("write_test 4: chunk = 0x%lx\n", *(buf-0x8));
 	//syscall(SYS_write, fd, buf, file_size);
 	ukl_write(fd, buf, file_size);
+	printk("write_test 5: chunk = 0x%lx\n", *(buf-0x8));
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
+	printk("write_test 6: chunk = 0x%lx\n", *(buf-0x8));
 	
 	close(fd);
 		
 	add_diff_to_sum(diffTime, endTime, startTime);
+	printk("write_test 7: chunk = 0x%lx\n", *(buf-0x8));
 	free(buf);
 	return;
 }
@@ -1207,7 +1222,8 @@ int lmain(void)
 	/*               GETPID                  */
 	/*****************************************/
 	
-	sleep(60);
+	sleep(1);
+	/*
 	info.iter = BASE_ITER * 100;
 	info.name = "ref";
 	one_line_test(fp, copy, ref_test, &info);
@@ -1220,7 +1236,7 @@ int lmain(void)
 	info.iter = BASE_ITER * 100;
 	info.name = "getpid";
 	one_line_test(fp, copy, getpid_test, &info);
-	
+	*/
 	
 	/*****************************************/
 	/*            CONTEXT SWITCH             */
@@ -1307,8 +1323,8 @@ int lmain(void)
 	/*****************************************/
 	/*     WRITE & READ & MMAP & MUNMAP      */
 	/*****************************************/
-
-	/****** SMALL ******/
+	/*
+	// ****** SMALL ******
 	
 	file_size = PAGE_SIZE;	
 	printf("file size: %d.\n", file_size);
@@ -1334,7 +1350,7 @@ int lmain(void)
 	info.name = "small page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
-	/****** MID ******/
+	// ***** MID ******
 	
 	file_size = PAGE_SIZE * 10;
 	printf("file size: %d.\n", file_size);
@@ -1360,7 +1376,7 @@ int lmain(void)
 	info.name = "mid page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
-	/****** BIG ******/
+	// ***** BIG ******
 	
 	file_size = PAGE_SIZE * 1000;	
 	printf("file size: %d.\n", file_size);
@@ -1385,8 +1401,8 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "big page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
-        /****** HUGE ******/
+	*/
+        // ***** HUGE ******
 	
 	file_size = PAGE_SIZE * 10000;	
 	printf("file size: %d.\n", file_size);
@@ -1410,12 +1426,12 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "huge page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
+
 	/*****************************************/
 	/*              WRITE & READ             */
 	/*****************************************/
-
-	/****** SMALL ******/
+	/*
+	// ***** SMALL ******
 	
 	fd_count = 10;
 
@@ -1432,7 +1448,7 @@ int lmain(void)
 	one_line_test(fp, copy, epoll_test, &info);
 	
 
-	/****** BIG ******/
+	// ***** BIG ******
 	
 	fd_count = 1000;
 
@@ -1447,7 +1463,7 @@ int lmain(void)
 	info.iter = BASE_ITER;
 	info.name = "epoll big";
 	one_line_test(fp, copy, epoll_test, &info);
-
+	*/
 	fclose(fp);
 	if (!isFirstIteration)
 	{

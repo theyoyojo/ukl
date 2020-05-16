@@ -14,19 +14,8 @@
 // __thread int nocounter;
 
 void *printer(int * id);
-void extern yield(void);
 
-int kmain(int argc, char *argv[]){
-
-	// int i = 0;
-	// nocounter = 0;
-	// for(i = 0; i < 10; i++){
-	// 	counter = counter + i*10;
-	// 	nocounter = nocounter + 1;
-	// 	printf("Counter = %d\n", counter);
-	// 	printf("No Counter = %d\n", nocounter);
-	// }
-
+int pmain(void){
 
 	pthread_t thread_id[QUEUE_SIZE];
 	int i = 0;
@@ -53,7 +42,8 @@ int kmain(int argc, char *argv[]){
 
 void *printer(int * id)
 {
-	while(1){
+	int i = 0;
+	for(i = 0; i < 10; i++){
 		printukl("Thread %d = A\n", id);
 		printukl("Thread %d = quick\n", id);
 		printukl("Thread %d = brown\n", id);
@@ -63,7 +53,18 @@ void *printer(int * id)
 		printukl("Thread %d = a\n", id);
 		printukl("Thread %d = lazy\n", id);
 		printukl("Thread %d = dog.\n", id);
-		// yield();
 	}
 	return 0;
 } 
+
+int kmain(void){
+        pthread_t thk;
+        if (pthread_create (&thk, NULL, pmain, NULL) != 0)
+        {
+                printf("testmain create failed");
+                return 1;
+        }
+
+        return 0;
+}
+

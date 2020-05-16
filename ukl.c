@@ -34,7 +34,7 @@ extern void* get_current_top_of_stack(void);
 
 void enter_ukl(void)
 {
- 	/*      
+ 	  /*    
 	__asm__("cmp $0x0, %rsp\n"
 	       "jl 1f\n"
 	       "movq %rsp, %rax\n"

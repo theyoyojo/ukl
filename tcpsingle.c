@@ -36,15 +36,15 @@ int kmain (void) {
   while (1) {
     socklen_t client_len = sizeof(client);
     client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len); // ukl_accept
-
+    printff("prev loop\n");
     while (1) {
       int read = recv(client_fd, buf, BUFFER_SIZE, 0); //  (recvfrom, fd, buf, len, flags, NULL, NULL);
 
       if (!read) break;
 
-      printff("Message received: %s\n", buf);
-
       err = send(client_fd, buf, read, 0); // (sendto, fd, buf, len, flags, NULL, 0);
+
+      printff("Message received: %s\n", buf);
 
     }
   }
