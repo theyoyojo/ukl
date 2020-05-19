@@ -159,17 +159,19 @@ void setup_networking(void){
 int interface(void)
 {
     setup_mm();
-    setup_networking();
+    /* setup_networking(); */
     lib_start_kmain();
 
     int i = 0;
 
+    printk("Bringup FS\n");
     fsbringup();
 
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
     //tracing_on();
 
+    printk("Kicking off kmain\n");
     kmain();
     
     //ukl_sync();

@@ -31,6 +31,18 @@ bool  isFirstIteration = false;
 const char *home = "/root/";
 char *output_fn = NULL;
 char *new_output_fn = NULL;
+
+#define NUM_PTS 100
+#define MAX_NAME_LEN 30
+struct test_point{
+  char test_name[MAX_NAME_LEN];
+  struct timespec average_time;
+};
+int test_point_idx = 0;
+struct test_point test_point_arr[NUM_PTS];
+
+int canary2 = 42;
+
 #define setup 		(struct timespec *fp) \
 			{struct timespec timeA ; \
 			struct timespec timeC; \
@@ -57,7 +69,7 @@ char *new_output_fn = NULL;
 #define OUTPUT_FN		OUTPUT_FILE_PATH "output_file.csv"
 #define NEW_OUTPUT_FN	OUTPUT_FILE_PATH "new_output_file.csv"
 #define DEBUG true
-#define BASE_ITER 10000
+#define BASE_ITER 1000
 
 #define PAGE_SIZE 4096
 
@@ -65,6 +77,7 @@ extern int printk(const char *fmt, ...);
 #define printf printk
 
 extern pid_t ukl_getpid(void);
+/* extern pid_t ukl_getppid(void); */
 extern ssize_t ukl_read(int fd, const void* buf, size_t count);
 extern ssize_t ukl_write(int fd, const void* buf, size_t count);
 extern unsigned long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
@@ -263,6 +276,11 @@ void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *
 	struct timespec *sum = calc_sum2(timeArray, runs);
 	struct timespec *average = calc_average(sum, runs);  
 	struct timespec *kbest = calc_k_closest(timeArray, runs);	
+
+
+  strcpy(test_point_arr[test_point_idx].test_name, info->name);
+  test_point_arr[test_point_idx].average_time = *average;
+  test_point_idx++;
 
 	if (!isFirstIteration)
 	{
@@ -523,6 +541,16 @@ void getpid_test(struct timespec *diffTime) {
 	return;
 
 }
+/* void getppid_test(struct timespec *diffTime) { */
+/* 	struct timespec startTime, endTime; */
+/* 	clock_gettime(CLOCK_MONOTONIC, &startTime); */
+/* 	//syscall(SYS_getpid); */
+/* 	ukl_getppid(); */
+/* 	clock_gettime(CLOCK_MONOTONIC, &endTime); */
+/* 	add_diff_to_sum(diffTime, endTime, startTime); */
+/* 	return; */
+
+/* } */
 
 int file_size = -1;
 void read_test(struct timespec *diffTime) { 
@@ -1154,7 +1182,9 @@ int copytestfile(void){
 
 int lmain(void)
 {
+  printf("Starting lmain base_iter is %d\n", BASE_ITER);
 	// home = getenv("LEBENCH_DIR");
+  memset(test_point_arr, 0, sizeof(struct test_point) );
 	
 	output_fn = (char *)malloc(500*sizeof(char));
 	strcpy(output_fn, home);
@@ -1207,20 +1237,24 @@ int lmain(void)
 	/*               GETPID                  */
 	/*****************************************/
 	
-	sleep(60);
+  printf("test starts in 10 sec\n");
+	sleep(10);
 	info.iter = BASE_ITER * 100;
-	info.name = "ref";
+	info.name = "0 ref";
 	one_line_test(fp, copy, ref_test, &info);
 
 	info.iter = 100;
-	info.name = "cpu";
+	info.name = "0 cpu";
 	one_line_test(fp, copy, cpu_test, &info);
 
 
 	info.iter = BASE_ITER * 100;
-	info.name = "getpid";
+	info.name = "0 getpid";
 	one_line_test(fp, copy, getpid_test, &info);
 	
+	/* info.iter = BASE_ITER * 100; */
+	/* info.name = "getppid"; */
+	/* one_line_test(fp, copy, getppid_test, &info); */
 	
 	/*****************************************/
 	/*            CONTEXT SWITCH             */
@@ -1314,24 +1348,24 @@ int lmain(void)
 	printf("file size: %d.\n", file_size);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "small write";
+	info.name = "1 small_write";
 	one_line_test(fp, copy, write_test, &info);
 	
 	info.iter = BASE_ITER * 10; 
-	info.name = "small read";
+	info.name = "5 small_read";
 	read_warmup();
 	one_line_test(fp, copy, read_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "small mmap";
+	info.name = "9 small_mmap";
 	one_line_test(fp, copy, mmap_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "small munmap";
+	info.name = "13 small_munmap";
 	one_line_test(fp, copy, munmap_test, &info);
 
 	info.iter = BASE_ITER * 5;
-	info.name = "small page fault";
+	info.name = "17 small_page_fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
 	/****** MID ******/
@@ -1340,24 +1374,24 @@ int lmain(void)
 	printf("file size: %d.\n", file_size);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "mid write";
+	info.name = "2 mid_write";
 	one_line_test(fp, copy, write_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "mid read";
+	info.name = "6 mid_read";
 	read_warmup();
 	one_line_test(fp, copy, read_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "mid mmap";
+	info.name = "10 mid_mmap";
 	one_line_test(fp, copy, mmap_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "mid munmap";
+	info.name = "14 mid_munmap";
 	one_line_test(fp, copy, munmap_test, &info);
 
 	info.iter = BASE_ITER * 5;
-	info.name = "mid page fault";
+	info.name = "18 mid_page_fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
 	/****** BIG ******/
@@ -1366,24 +1400,24 @@ int lmain(void)
 	printf("file size: %d.\n", file_size);
 	
 	info.iter = BASE_ITER / 2;
-	info.name = "big write";
+	info.name = "3 big_write";
 	one_line_test(fp, copy, write_test, &info);
 	
 	info.iter = BASE_ITER;
-	info.name = "big read";
+	info.name = "7 big_read";
 	read_warmup();
 	one_line_test(fp, copy, read_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "big mmap";
+	info.name = "11 big_mmap";
 	one_line_test(fp, copy, mmap_test, &info);
 	
 	info.iter = BASE_ITER / 4;
-	info.name = "big munmap";
+	info.name = "15 big_munmap";
 	one_line_test(fp, copy, munmap_test, &info);
 	
 	info.iter = BASE_ITER * 5;
-	info.name = "big page fault";
+	info.name = "19 big_page_fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
         /****** HUGE ******/
@@ -1392,23 +1426,23 @@ int lmain(void)
 	printf("file size: %d.\n", file_size);
 	
 	info.iter = BASE_ITER / 4;
-	info.name = "huge write";
+	info.name = "4 huge_write";
 	one_line_test(fp, copy, write_test, &info);
 	
 	info.iter = BASE_ITER;
-	info.name = "huge read";
+	info.name = "8 huge_read";
 	one_line_test(fp, copy, read_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "huge mmap";
+	info.name = "12 huge_mmap";
 	one_line_test(fp, copy, mmap_test, &info);
 	
 	info.iter = BASE_ITER / 4; 
-	info.name = "huge munmap";
+	info.name = "16 huge_munmap";
 	one_line_test(fp, copy, munmap_test, &info);
 
 	info.iter = BASE_ITER * 5;
-	info.name = "huge page fault";
+	info.name = "20 huge_page_fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	
 	/*****************************************/
@@ -1420,15 +1454,15 @@ int lmain(void)
 	fd_count = 10;
 
 	info.iter = BASE_ITER * 10;
-	info.name = "select";
+	info.name = "21 small_select";
 	one_line_test(fp, copy, select_test, &info);
 	
 	info.iter = BASE_ITER * 10;
-	info.name = "poll";
+	info.name = "22 small_poll";
 	one_line_test(fp, copy, poll_test, &info);
 		
 	info.iter = BASE_ITER * 10;
-	info.name = "epoll";
+	info.name = "23 small_epoll";
 	one_line_test(fp, copy, epoll_test, &info);
 	
 
@@ -1437,15 +1471,15 @@ int lmain(void)
 	fd_count = 1000;
 
 	info.iter = BASE_ITER;
-	info.name = "select big";
+	info.name = "24 big_select";
 	one_line_test(fp, copy, select_test, &info);
 
 	info.iter = BASE_ITER;
-	info.name = "poll big";
+	info.name = "25 big_poll";
 	one_line_test(fp, copy, poll_test, &info);
 
 	info.iter = BASE_ITER;
-	info.name = "epoll big";
+	info.name = "26 big_epoll";
 	one_line_test(fp, copy, epoll_test, &info);
 
 	fclose(fp);
@@ -1467,7 +1501,19 @@ int lmain(void)
 	printf("Test took: %ld.%09ld seconds\n",diffTime->tv_sec, diffTime->tv_nsec); 
 	free(diffTime);
 	//copytestfile();
+
+  int i;
+  printf("dumping results tp is %d\n\n\n", test_point_idx);
+  for(i = 0; i < test_point_idx; i++){
+    printf("%s\t%ld.%09ld\tturesult\n",
+           test_point_arr[i].test_name,
+           test_point_arr[i].average_time.tv_sec,
+           test_point_arr[i].average_time.tv_nsec
+           );
+  }
+
 	ukl_sync();
+  printf("Done\n");
 	return(0);
 }
 
