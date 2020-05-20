@@ -256,7 +256,6 @@ void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *
 
 	struct timespec* timeArray = (struct timespec *)malloc(sizeof(struct timespec) * runs);
 	for (int i=0; i < runs; i++) {
-		printk("Run = %d\n", i);
 		/*printf("test i = %d\n", i);
 		if(i == 662){
 			dump_unreclaimable_slab();
@@ -584,28 +583,20 @@ void write_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 	char *buf;
 	buf = (char *) malloc (sizeof(char) * file_size);
-	printk("write_test 1: chunk = 0x%lx\n", *(buf-0x8));
-	printk("buf = 0x%lx\n", buf);
 	for (int i = 0; i < file_size; i++) {
 		buf[i] = 'a';
 	}
-	printk("write_test 2: chunk = 0x%lx\n", *(buf-0x8));
 	int fd = open("/mytmpfs/test_file.txt", O_CREAT | O_WRONLY);
 	if (fd < 0) printf("invalid fd in write: %d\n", fd);
-	printk("write_test 3: chunk = 0x%lx\n", *(buf-0x8));
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	printk("write_test 4: chunk = 0x%lx\n", *(buf-0x8));
 	//syscall(SYS_write, fd, buf, file_size);
 	ukl_write(fd, buf, file_size);
-	printk("write_test 5: chunk = 0x%lx\n", *(buf-0x8));
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
-	printk("write_test 6: chunk = 0x%lx\n", *(buf-0x8));
 	
 	close(fd);
 		
 	add_diff_to_sum(diffTime, endTime, startTime);
-	printk("write_test 7: chunk = 0x%lx\n", *(buf-0x8));
 	free(buf);
 	return;
 }
