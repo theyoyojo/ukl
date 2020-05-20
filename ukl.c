@@ -42,15 +42,11 @@ void enter_ukl(void)
 	       );
 	*/
 	
-	struct thread_info *ti = current_thread_info();
-	u32 cached_flags;
-	
 	long unsigned int myrsp;
         asm("\t movq %%rsp,%0" : "=r"(myrsp));
 
         if(myrsp < 0x800000000000){
                 local_irq_disable();
-		cached_flags = READ_ONCE(ti->flags);
 		entry_SYSCALL_64();
 		enter_from_user_mode();
 		local_irq_enable();
@@ -64,15 +60,11 @@ void enter_ukl(void)
 
 void exit_ukl(void)
 {
-    struct thread_info *ti = current_thread_info();
-    u32 cached_flags;
-
     void* krsp;
     long unsigned int myrsp;
     asm("\t movq %%rsp,%0" : "=r"(myrsp));
     
     if(myrsp < 0x800000000000){
-       cached_flags = READ_ONCE(ti->flags);
        krsp = get_current_top_of_stack();
        syscall_return_slowpath(krsp);
     }
@@ -690,6 +682,15 @@ pid_t ukl_getpid(void){
 	retval = __ukl_getpid();
 	exit_ukl();
 	return retval;
+}
+
+pid_t ukl_getppid(void){
+       extern pid_t __ukl_getppid(void);
+       pid_t retval;
+       enter_ukl();
+       retval = __ukl_getppid();
+       exit_ukl();
+       return retval;
 }
 
 uid_t ukl_getuid(void){
