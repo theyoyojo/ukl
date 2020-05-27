@@ -52,8 +52,10 @@ void __copy_tls(void * dest, void * src, size_t n, size_t m){
 
 void setup_mm(void){
     struct task_struct *me = current;
-    
-    //me->mm = me->active_mm;
+
+   printk("init pgd = 0x%lx\n", init_mm.pgd);   
+   printk("current pgd = 0x%lx\n", me->active_mm->pgd);   
+   // me->mm = me->active_mm;
     me->mm = mm_alloc();
     me->mm->get_unmapped_area = arch_get_unmapped_area_topdown;
     me->mm->mmap_base = 0x7f0000000000; 
@@ -62,7 +64,12 @@ void setup_mm(void){
     me->mm->start_brk = 0x405000;
     me->mm->brk = 0x405000;
 
-    me->active_mm = me->mm;
+   printk("new pgd = 0x%lx\n", me->mm->pgd);   
+    //me->active_mm = me->mm;
+    init_mm.pgd = me->mm->pgd;
+   printk("init pgd = 0x%lx\n", init_mm.pgd);   
+
+   printk("sem->owner = 0x%lx sem->count = 0x%lx\n", &me->mm->mmap_sem.owner, &me->mm->mmap_sem.count);
 
     printk("thread_info->flags = %lx\n", me->thread_info.flags);
 
@@ -160,7 +167,7 @@ void setup_networking(void){
 int interface(void)
 {
     setup_mm();
-    setup_networking();
+    //setup_networking();
     lib_start_kmain();
 
     int i = 0;
@@ -169,7 +176,7 @@ int interface(void)
 
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
-    //tracing_on();
+    tracing_on();
 
     kmain();
     
