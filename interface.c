@@ -18,14 +18,16 @@
 #include <asm/proto.h>
 #include <asm/fsgsbase.h>
 #include <linux/sched.h>
+#include <linux/syscalls.h>
 
 void * tls;
 
+extern void __libc_start_main(void (*main) (void));
 extern void __libc_setup_tls (unsigned long start, unsigned long tbss_start, unsigned long end);
 extern void __ctype_init (void);
 extern unsigned long get_gs_value(void);
-extern int fsbringup(void);
 extern void ukl_sync(void);
+extern long __ukl_mount(char *dev_name, char *dir_name, char *type, unsigned long flags, void *data);
 
 void printaddr(long addr){
 	printk("*** Called from addr 0x%lx ***\n", addr);
@@ -164,21 +166,62 @@ void setup_networking(void){
     printk("Set up of network interface, done.\n");
 }
 
+int fsbringup(void){
+	ksys_mkdir ("/mytmpfs", 0777);
+        ksys_mkdir ("/root", 0777);
+
+        if(__ukl_mount("tmpfs", "/mytmpfs", "tmpfs", 0xC0ED0000, "size=4g") == -1){
+                printk("mount: /mytmpfs fail");
+        } else {
+                printk("mount /mytmpfs successful!\n");
+        }
+
+        // Mounting root files system provided by QEMU
+
+        if (ksys_mknod ("/dev/root", S_IFBLK|0700, MKDEV(8,0))) {
+                printk("mknod: /dev/root");
+        } else {
+                printk("mknod successful!\n");
+        }
+
+
+        if (__ukl_mount ("/dev/root", "/root", "ext2", 1024, "") == -1) {
+                printk("mount: /root");
+        } else {
+                printk("mount successful!\n");
+        }
+
+	return;
+}
+
 int interface(void)
 {
     setup_mm();
     //setup_networking();
-    lib_start_kmain();
-
-    int i = 0;
-
     fsbringup();
+    //tracing_on();
+ 
+    struct task_struct *me = current;
+    printk("Old task struct flags = %x\n", me->flags);
+    me->flags = me->flags^PF_KTHREAD;
+    me->flags = me->flags^PF_NOFREEZE;
+    me->flags = me->flags^PF_USED_ASYNC;
+    me->flags = me->flags^PF_SUPERPRIV;
+    printk("Current task struct flags = %x\n", me->flags);
+    printk("Current task struct address = %lx\n", me);
+    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+    me->thread_info.flags = 0;
+    printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+   
+    __libc_start_main((void *) kmain);
+
+    //int i = 0;
+
 
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
-    tracing_on();
 
-    kmain();
+    // kmain();
     
     //ukl_sync();
     
