@@ -45,6 +45,15 @@ lebench: glibc
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
+malloctest: glibc
+	gcc -c -o malloctest.o malloctest.c -mcmodel=kernel -ggdb -mno-red-zone
+	make -C ../linux M=$(PWD)
+	ld -r -o malloctestfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition malloctest.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o malloctestfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	make -C ../linux -j$(shell nproc)
+
 writetest: glibc
 	gcc -c -o wt.o write_test.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
