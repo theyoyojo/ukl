@@ -176,7 +176,7 @@ int interface(void)
 
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
-    tracing_on();
+    //tracing_on();
 
     kmain();
     

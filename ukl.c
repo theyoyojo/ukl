@@ -89,13 +89,14 @@ void printukl(const char *fmt, ...) {
 		buf[len - 1] = '\0';
 
 
-	printk("%s\n", buf);
+	//trace_printk("%s\n", buf);
 	exit_ukl();
 }
 
 ssize_t ukl_write(int fd, const void* buf, size_t count) {
 	extern ssize_t __ukl_write(int fd, const void* buf, size_t count);
 	ssize_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_write ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_write(fd, buf, count);
 	exit_ukl();
@@ -105,6 +106,7 @@ ssize_t ukl_write(int fd, const void* buf, size_t count) {
 ssize_t ukl_read(int fd, const void* buf, size_t count){
 	extern ssize_t __ukl_read(int fd, const void* buf, size_t count);
 	ssize_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_read ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_read(fd, buf, count);
 	exit_ukl();
@@ -114,6 +116,7 @@ ssize_t ukl_read(int fd, const void* buf, size_t count){
 long ukl_open(const char* filename, int flags, unsigned short mode){
 	extern long __ukl_open(const char* filename, int flags, unsigned short mode);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_open ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_open(filename, flags, mode);
 	exit_ukl();
@@ -123,6 +126,7 @@ long ukl_open(const char* filename, int flags, unsigned short mode){
 long ukl_openat(int dfd, const char * filename, int flags, umode_t mode){
 	extern long __ukl_openat(int dfd, const char * filename, int flags, umode_t mode);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_openat ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_openat(dfd, filename, flags, mode);
 	exit_ukl();
@@ -132,6 +136,7 @@ long ukl_openat(int dfd, const char * filename, int flags, umode_t mode){
 long ukl_close(int fd){
 	extern int __ukl_close(unsigned int fd);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_close ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_close(fd);
 	exit_ukl();
@@ -140,6 +145,7 @@ long ukl_close(int fd){
 
 void ukl_exit_group(int error_code){
 	extern void __ukl_exit_group(int error_code);
+	//trace_printk("*** PID %d SYSCALL __ukl_exit_group ***\n", current->pid);
 	enter_ukl();
 	__ukl_exit_group(error_code);
 	exit_ukl();
@@ -148,6 +154,7 @@ void ukl_exit_group(int error_code){
 int ukl_socket(int family, int type, int protocol){
 	extern int __ukl_socket(int family, int type, int protocol);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_socket ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_socket(family, type, protocol);
 	exit_ukl();
@@ -157,6 +164,7 @@ int ukl_socket(int family, int type, int protocol){
 int ukl_bind(int fd, struct sockaddr  *umyaddr, int addrlen){
 	extern int __ukl_bind(int fd, struct sockaddr  *umyaddr, int addrlen);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_bind ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_bind(fd, umyaddr, addrlen);
 	exit_ukl();
@@ -166,6 +174,7 @@ int ukl_bind(int fd, struct sockaddr  *umyaddr, int addrlen){
 int ukl_connect(int fd, struct sockaddr  *uservaddr, int addrlen){
 	extern int __ukl_connect(int fd, struct sockaddr  * uservaddr, int addrlen);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_connect ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_connect(fd, uservaddr, addrlen);
 	exit_ukl();
@@ -175,6 +184,7 @@ int ukl_connect(int fd, struct sockaddr  *uservaddr, int addrlen){
 int ukl_listen(int fd, int backlog){
 	extern int __ukl_listen(int fd, int backlog);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_listen ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_listen(fd, backlog);
 	exit_ukl();
@@ -184,6 +194,7 @@ int ukl_listen(int fd, int backlog){
 int ukl_accept(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen){
 	extern int __ukl_accept(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_accept ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_accept(fd, upeer_sockaddr, upeer_addrlen);
 	exit_ukl();
@@ -193,6 +204,7 @@ int ukl_accept(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen){
 int ukl_accept4(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen, int flags){
 	extern int __ukl_accept4(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen, int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_accept4 ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_accept4(fd, upeer_sockaddr, upeer_addrlen, flags);
 	exit_ukl();
@@ -202,6 +214,7 @@ int ukl_accept4(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen, int
 int ukl_ioctl(int fd, int cmd, long arg){
 	extern int __ukl_ioctl(int fd, int cmd, long arg);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_ioctl ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_ioctl(fd, cmd, arg);
 	exit_ukl();
@@ -211,6 +224,7 @@ int ukl_ioctl(int fd, int cmd, long arg){
 int ukl_recvfrom(int fd, void  *ubuf, size_t size, unsigned int flags, struct sockaddr  *addr, int  *addr_len){
 	extern int __ukl_recvfrom(int fd, void  * ubuf, size_t size, unsigned int flags, struct sockaddr  * addr, int  * addr_len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_recvfrom ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_recvfrom(fd, ubuf, size, flags, addr, addr_len);
 	exit_ukl();
@@ -220,6 +234,7 @@ int ukl_recvfrom(int fd, void  *ubuf, size_t size, unsigned int flags, struct so
 int ukl_sendto(int fd, void *buff, size_t len, unsigned int flags, struct sockaddr *addr, int addr_len){
 	extern int __ukl_sendto(int fd, void *buff, size_t len, unsigned int flags, struct sockaddr *addr, int addr_len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_sendto ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_sendto(fd, buff, len, flags, addr, addr_len);
 	exit_ukl();
@@ -229,6 +244,7 @@ int ukl_sendto(int fd, void *buff, size_t len, unsigned int flags, struct sockad
 long ukl_recvmsg(int fd, struct user_msghdr *msg, unsigned int flags){
 	extern int __ukl_recvmsg(int fd, struct user_msghdr *msg, unsigned int flags);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_recvmsg ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_recvmsg(fd, msg, flags);
 	exit_ukl();
@@ -238,6 +254,7 @@ long ukl_recvmsg(int fd, struct user_msghdr *msg, unsigned int flags){
 int ukl_recv(int fd, void  *ubuf, size_t size, unsigned int flags){
 	extern int __ukl_recv(int fd, void  *ubuf, size_t size, unsigned int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_recv ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_recv(fd, ubuf, size, flags);
 	exit_ukl();
@@ -247,6 +264,7 @@ int ukl_recv(int fd, void  *ubuf, size_t size, unsigned int flags){
 int ukl_send(int fd, void *buff, size_t len, unsigned int flags){
 	extern int __ukl_send(int fd, void *buff, size_t len, unsigned int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_send ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_send(fd, buff, len, flags);
 	exit_ukl();
@@ -256,6 +274,7 @@ int ukl_send(int fd, void *buff, size_t len, unsigned int flags){
 int ukl_setsockopt(int fd, int level, int optname, char *optval, int optlen){
 	extern int __ukl_setsockopt(int fd, int level, int optname, char *optval, int optlen);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_setsockopt ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_setsockopt(fd, level, optname, optval, optlen);
 	exit_ukl();
@@ -265,6 +284,7 @@ int ukl_setsockopt(int fd, int level, int optname, char *optval, int optlen){
 int ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen){
 	extern int __ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getsockopt ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getsockopt(fd, level, optname, optval, optlen);
 	exit_ukl();
@@ -274,6 +294,7 @@ int ukl_getsockopt(int fd, int level, int optname, char *optval, int * optlen){
 int ukl_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
 	extern int __ukl_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getsockname ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getsockname(fd, usockaddr, usockaddr_len);
 	exit_ukl();
@@ -283,6 +304,7 @@ int ukl_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
 long ukl_arch_prctl(int option, unsigned long arg2){
 	extern long __ukl_arch_prctl(int option, unsigned long arg2);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_arch_prctl ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_arch_prctl(option, arg2);
 	exit_ukl();
@@ -292,6 +314,7 @@ long ukl_arch_prctl(int option, unsigned long arg2){
 int ukl_get_thread_area(struct user_desc  *u_info){
 	extern int __ukl_get_thread_area(struct user_desc  * u_info);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_get_thread_area ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_get_thread_area(u_info);
 	exit_ukl();
@@ -301,6 +324,7 @@ int ukl_get_thread_area(struct user_desc  *u_info){
 int ukl_set_thread_area(struct user_desc  *u_info){
 	extern int __ukl_set_thread_area(struct user_desc  *u_info);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_set_thread_area ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_set_thread_area(u_info);
 	exit_ukl();
@@ -310,16 +334,18 @@ int ukl_set_thread_area(struct user_desc  *u_info){
 unsigned long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off){
 	extern unsigned long __ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
 	unsigned long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mmap ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mmap(addr, len, prot, flags, fd, off);
 	exit_ukl();
-	//printk("MMAP:\taddr = 0x%lx\tlen = 0x%lx\n", retval, len);
+	////trace_printk("MMAP:\taddr = 0x%lx\tlen = 0x%lx\n", retval, len);
 	return retval;
 }
 
 int ukl_set_tid_address(int * tidptr){
 	extern int __ukl_set_tid_address(int * ptr);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_set_tid_address ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_set_tid_address(tidptr);
 	exit_ukl();
@@ -329,6 +355,7 @@ int ukl_set_tid_address(int * tidptr){
 int ukl_set_robust_list(struct robust_list_head * head, size_t len){
 	extern int __ukl_set_robust_list(struct robust_list_head * head, size_t len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_set_robust_list ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_set_robust_list(head, len);
 	exit_ukl();
@@ -338,6 +365,7 @@ int ukl_set_robust_list(struct robust_list_head * head, size_t len){
 int ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigsetsize){
 	extern int __ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigsetsize);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_rt_sigprocmask ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_rt_sigprocmask(how, nset, oset, sigsetsize);
 	exit_ukl();
@@ -347,6 +375,7 @@ int ukl_rt_sigprocmask(int how, sigset_t * nset,  sigset_t * oset, size_t sigset
 int ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize){
 	extern int __ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * oact, size_t sigsetsize);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_rt_sigaction ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_rt_sigaction(sig, act, oact, sigsetsize);
 	exit_ukl();
@@ -356,6 +385,7 @@ int ukl_rt_sigaction(int sig, const struct sigaction * act, struct sigaction * o
 int ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim, struct rlimit64 * old_rlim){
 	extern int __ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_rlim,	struct rlimit64 * old_rlim);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_prlimit64 ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_prlimit64(pid, resource, new_rlim, old_rlim);
 	exit_ukl();
@@ -366,6 +396,7 @@ int ukl_prlimit64(pid_t pid, unsigned int resource, const struct rlimit64 * new_
 unsigned long ukl_brk(unsigned long brk){
 	extern unsigned long __ukl_brk(unsigned long brk);
 	unsigned long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_brk ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_brk(brk);
 	exit_ukl();
@@ -375,6 +406,7 @@ unsigned long ukl_brk(unsigned long brk){
 int ukl_fstat(unsigned int fd, struct stat  * statbuf){
 	extern int __ukl_fstat(unsigned int fd, struct stat  * statbuf);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_fstat ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_fstat(fd, statbuf);
 	exit_ukl();
@@ -384,6 +416,7 @@ int ukl_fstat(unsigned int fd, struct stat  * statbuf){
 int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 	extern int __ukl_mprotect(unsigned long start, size_t len, unsigned long prot);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mprotect ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mprotect(start, len, prot);
 	exit_ukl();
@@ -392,18 +425,20 @@ int ukl_mprotect(unsigned long start, size_t len, unsigned long prot){
 
 
 int ukl_munmap(unsigned long addr, size_t len){
-	//printk("UNMAP START:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
+	////trace_printk("UNMAP START:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
 	extern int __ukl_munmap(unsigned long addr, size_t len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_munmap ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_munmap(addr, len);
 	exit_ukl();
-	//printk("UNMAP DONE:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
+	////trace_printk("UNMAP DONE:\taddr = 0x%lx\tlen = 0x%lx\n", addr, len);
 	return retval;
 }
 
 void ukl_exit(int error_code){
 	extern void __ukl_exit(int error_code);
+	//trace_printk("*** PID %d SYSCALL __ukl_exit ***\n", current->pid);
 	enter_ukl();
 	__ukl_exit(error_code);
 	exit_ukl();
@@ -412,6 +447,7 @@ void ukl_exit(int error_code){
 long ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3){
 	extern long __ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel_timespec * utime, unsigned int  * uaddr2, unsigned int  val3);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_futex ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_futex(uaddr, op, val, utime, uaddr2, val3);
 	exit_ukl();
@@ -421,6 +457,7 @@ long ukl_futex(unsigned int  * uaddr, int op, unsigned int  val, struct __kernel
 int ukl_setrlimit (unsigned int  resource, const struct rlimit* rlim){
 	extern int __ukl_setrlimit(unsigned int resource, const struct rlimit* rlim);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_setrlimit ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_setrlimit(resource, rlim);
 	exit_ukl();
@@ -527,6 +564,7 @@ static int ukl__cvdso_clock_gettime_common(clockid_t clock, struct __kernel_time
 static int ukl__cvdso_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp){
 	extern int __ukl_clock_gettime(const clockid_t which_clock, struct __kernel_timespec * tp);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_clock_gettime ***\n", current->pid);
 	retval = ukl__cvdso_clock_gettime_common(which_clock, tp);
 	if (unlikely(retval)){
 		enter_ukl();
@@ -570,6 +608,7 @@ int ukl_gettimeofday(struct timeval* tv, struct timezone* tz){
 int ukl_epoll_create1(int flags){
 	extern int __ukl_epoll_create1(int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_epoll_create1 ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_epoll_create1(flags);
 	exit_ukl();
@@ -579,6 +618,7 @@ int ukl_epoll_create1(int flags){
 int ukl_epoll_create(int size){
 	extern int __ukl_epoll_create(int size);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_epoll_create ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_epoll_create(size);
 	exit_ukl();
@@ -588,6 +628,7 @@ int ukl_epoll_create(int size){
 int ukl_pipe2(int* fildes, int flags){
 	extern int __ukl_pipe2(int* fildes, int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_pipe2 ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_pipe2(fildes, flags);
 	exit_ukl();
@@ -597,6 +638,7 @@ int ukl_pipe2(int* fildes, int flags){
 time_t ukl_time (time_t *t){
 	extern time_t __ukl_time (time_t *t);
 	time_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_time ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_time (t);
 	exit_ukl();
@@ -606,6 +648,7 @@ time_t ukl_time (time_t *t){
 int ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg){
 	extern int __ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_fcntl ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_fcntl(fd, cmd, arg);
 	exit_ukl();
@@ -615,6 +658,7 @@ int ukl_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg){
 int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event){
 	extern int __ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_epoll_ctl ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_epoll_ctl(epfd, op, fd, event);
 	exit_ukl();
@@ -624,6 +668,7 @@ int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event){
 int ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout){
 	extern int __ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_epoll_wait ***\n", current->pid);
 	enter_ukl();
 	retval =  __ukl_epoll_wait(epfd, events, maxevents, timeout);
 	exit_ukl();
@@ -633,6 +678,7 @@ int ukl_epoll_wait(int epfd, struct epoll_event * events, int maxevents, int tim
 int ukl_epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t * sigmask, size_t sigsetsize){
 	extern int __ukl_epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int timeout, const sigset_t * sigmask, size_t sigsetsize);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_epoll_pwait ***\n", current->pid);
 	enter_ukl();
 	retval =  __ukl_epoll_pwait(epfd, events, maxevents, timeout, sigmask, sigsetsize);
 	exit_ukl();
@@ -642,6 +688,7 @@ int ukl_epoll_pwait(int epfd, struct epoll_event* events, int maxevents, int tim
 int ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp){
 	extern int __ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_nanosleep ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_nanosleep(rqtp, rmtp);
 	exit_ukl();
@@ -651,6 +698,7 @@ int ukl_nanosleep(struct __kernel_timespec *rqtp, struct __kernel_timespec *rmtp
 int ukl_mlock(long start, size_t len){
 	extern int __ukl_mlock(long start, size_t len);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mlock ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mlock(start, len);
 	exit_ukl();
@@ -660,6 +708,7 @@ int ukl_mlock(long start, size_t len){
 int ukl_mlock2(long start, size_t len, int flags){
 	extern int __ukl_mlock2(long start, size_t len, int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mlock2 ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mlock2(start, len, flags);
 	exit_ukl();
@@ -669,6 +718,7 @@ int ukl_mlock2(long start, size_t len, int flags){
 int ukl_tgkill(pid_t tgid, pid_t pid, int sig){
 	extern int __ukl_tgkill(pid_t tgid, pid_t pid, int sig);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_tgkill ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_tgkill(tgid, pid, sig);
 	exit_ukl();
@@ -678,6 +728,7 @@ int ukl_tgkill(pid_t tgid, pid_t pid, int sig){
 pid_t ukl_getpid(void){
 	extern pid_t __ukl_getpid(void);
 	pid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getpid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getpid();
 	exit_ukl();
@@ -687,6 +738,7 @@ pid_t ukl_getpid(void){
 pid_t ukl_getppid(void){
        extern pid_t __ukl_getppid(void);
        pid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getppid ***\n", current->pid);
        enter_ukl();
        retval = __ukl_getppid();
        exit_ukl();
@@ -696,6 +748,7 @@ pid_t ukl_getppid(void){
 uid_t ukl_getuid(void){
 	extern uid_t __ukl_getuid(void);
 	uid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getuid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getuid();
 	exit_ukl();
@@ -705,6 +758,7 @@ uid_t ukl_getuid(void){
 uid_t ukl_geteuid(void){
 	extern uid_t __ukl_geteuid(void);
 	uid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_geteuid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_geteuid();
 	exit_ukl();
@@ -714,6 +768,7 @@ uid_t ukl_geteuid(void){
 pid_t ukl_gettid(void){
 	extern pid_t __ukl_gettid(void);
 	pid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_gettid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_gettid();
 	exit_ukl();
@@ -723,6 +778,7 @@ pid_t ukl_gettid(void){
 gid_t ukl_getgid(void){
 	extern gid_t __ukl_getgid(void);
 	pid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getgid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getgid();
 	exit_ukl();
@@ -732,6 +788,7 @@ gid_t ukl_getgid(void){
 gid_t ukl_getegid(void){
 	extern gid_t __ukl_getegid(void);
 	pid_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getegid ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getegid();
 	exit_ukl();
@@ -741,6 +798,7 @@ gid_t ukl_getegid(void){
 int ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags){
 	extern int __ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int flags);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_sendmmsg ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_sendmmsg(fd, mmsg, vlen, flags);
 	exit_ukl();
@@ -750,6 +808,7 @@ int ukl_sendmmsg(int fd, struct mmsghdr *mmsg, unsigned int vlen, unsigned int f
 long ukl_mknod(const char * filename, umode_t mode, unsigned int dev){
 	extern long __ukl_mknod(const char * filename, umode_t mode, unsigned int dev);
 	long retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mknod ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mknod(filename, mode, dev);
 	exit_ukl();
@@ -759,6 +818,7 @@ long ukl_mknod(const char * filename, umode_t mode, unsigned int dev){
 int ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data){
 	extern int __ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mount ***\n", current->pid);
 	enter_ukl();
 	retval =__ukl_mount(dev_name, dir_name, type, flags, data);
 	exit_ukl();
@@ -768,6 +828,7 @@ int ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags
 int ukl_chroot(const char * filename){
 	extern int __ukl_chroot(const char * filename);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_chroot ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_chroot(filename);
 	exit_ukl();
@@ -777,6 +838,7 @@ int ukl_chroot(const char * filename){
 int ukl_chdir(const char * filename){
 	extern int __ukl_chdir(const char * filename);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_chdir ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_chdir(filename);
 	exit_ukl();
@@ -786,6 +848,7 @@ int ukl_chdir(const char * filename){
 long ukl_mkdir(const char *pathname, umode_t mode){
 	extern long __ukl_mkdir(const char *pathname, umode_t mode);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_mkdir ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_mkdir(pathname, mode);
 	exit_ukl();
@@ -794,6 +857,7 @@ long ukl_mkdir(const char *pathname, umode_t mode){
 
 void ukl_sync(void){
 	extern void __ukl_sync(void);
+	//trace_printk("*** PID %d SYSCALL __ukl_sync ***\n", current->pid);
 	enter_ukl();
 	__ukl_sync();
 	exit_ukl();
@@ -803,6 +867,7 @@ void ukl_sync(void){
 int ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __kernel_old_timeval  * tvp){
 	extern int __ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __kernel_old_timeval  * tvp);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_select ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_select(n, inp, outp, exp, tvp);
 	exit_ukl();
@@ -812,6 +877,7 @@ int ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __ker
 int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs){
 	extern int __ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_poll ***\n", current->pid);
 	enter_ukl();
 	retval =__ukl_poll(ufds, nfds, timeout_msecs);
 	exit_ukl();
@@ -821,6 +887,7 @@ int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs){
 int ukl_sysinfo(struct sysinfo * info){
 	extern int __ukl_sysinfo(struct sysinfo * info);
 	int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_sysinfo ***\n", current->pid);
 	enter_ukl();
 	retval =__ukl_sysinfo(info);
 	exit_ukl();
@@ -830,6 +897,7 @@ int ukl_sysinfo(struct sysinfo * info){
 int ukl_renameat2(int olddfd, const char *oldname, int newdfd, const char *newname, unsigned int flags){
 	extern int __ukl_renameat2(int olddfd, const char *oldname, int newdfd, const char *newname, unsigned int flags);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_renameat2 ***\n", current->pid);
         enter_ukl();
         retval =__ukl_renameat2(olddfd, oldname, newdfd, newname, flags);
         exit_ukl();
@@ -839,6 +907,7 @@ int ukl_renameat2(int olddfd, const char *oldname, int newdfd, const char *newna
 int ukl_renameat(int olddfd, const char __user *oldname, int newdfd, const char __user *newname){
 	extern int __ukl_renameat(int olddfd, const char *oldname, int newdfd, const char *newname);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_renameat ***\n", current->pid);
         enter_ukl();
         retval =__ukl_renameat(olddfd, oldname, newdfd, newname);
         exit_ukl();
@@ -848,6 +917,7 @@ int ukl_renameat(int olddfd, const char __user *oldname, int newdfd, const char 
 int ukl_rename(const char *oldname, const char *newname){
 	extern int __ukl_rename(const char *oldname, const char *newname);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_rename ***\n", current->pid);
         enter_ukl();
         retval =__ukl_rename(oldname, newname);
         exit_ukl();
@@ -857,6 +927,7 @@ int ukl_rename(const char *oldname, const char *newname){
 int ukl_getrusage(int who, struct rusage * ru){
         extern int __ukl_getrusage(int who, struct rusage * ru);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getrusage ***\n", current->pid);
         enter_ukl();
         retval =__ukl_getrusage(who, ru);
         exit_ukl();
@@ -866,6 +937,7 @@ int ukl_getrusage(int who, struct rusage * ru){
 off_t ukl_lseek(unsigned int fd, off_t offset, unsigned int whence){
         extern off_t __ukl_lseek(unsigned int fd, off_t offset, unsigned int whence);
         off_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_lseek ***\n", current->pid);
         enter_ukl();
         retval = __ukl_lseek(fd, offset, whence);
         exit_ukl();
@@ -875,6 +947,7 @@ off_t ukl_lseek(unsigned int fd, off_t offset, unsigned int whence){
 int ukl_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
         extern int __ukl_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getpeername ***\n", current->pid);
         enter_ukl();
         retval =__ukl_getpeername(fd, usockaddr, usockaddr_len);
         exit_ukl();
@@ -884,6 +957,7 @@ int ukl_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len){
 int ukl_kill(pid_t pid, int sig){
         extern int __ukl_kill(pid_t pid, int sig);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_kill ***\n", current->pid);
         enter_ukl();
         retval =__ukl_kill(pid, sig);
         exit_ukl();
@@ -893,6 +967,7 @@ int ukl_kill(pid_t pid, int sig){
 int ukl_rt_sigsuspend(sigset_t * unewset, size_t sigsetsize){
         extern int __ukl_rt_sigsuspend(sigset_t * unewset, size_t sigsetsize);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_rt_sigsuspend ***\n", current->pid);
         enter_ukl();
         retval =__ukl_rt_sigsuspend(unewset, sigsetsize);
         exit_ukl();
@@ -902,6 +977,7 @@ int ukl_rt_sigsuspend(sigset_t * unewset, size_t sigsetsize){
 ssize_t ukl_getrandom(char * buf, size_t count, unsigned int flags){
 	extern ssize_t __ukl_getrandom(char * buf, size_t count, unsigned int flags);
 	ssize_t retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getrandom ***\n", current->pid);
 	enter_ukl();
 	retval = __ukl_getrandom(buf, count, flags);
 	exit_ukl();
@@ -911,6 +987,7 @@ ssize_t ukl_getrandom(char * buf, size_t count, unsigned int flags){
 int ukl_settimeofday(struct __kernel_old_timeval * tv, struct timezone * tz){
         extern int __ukl_settimeofday(struct __kernel_old_timeval * tv, struct timezone * tz);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_settimeofday ***\n", current->pid);
         enter_ukl();
         retval =__ukl_settimeofday(tv, tz);
         exit_ukl();
@@ -920,6 +997,7 @@ int ukl_settimeofday(struct __kernel_old_timeval * tv, struct timezone * tz){
 int ukl_getitimer(int which, struct itimerval * value){
         extern int __ukl_getitimer(int which, struct itimerval * value);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_getitimer ***\n", current->pid);
         enter_ukl();
         retval =__ukl_getitimer(which, value);
         exit_ukl();
@@ -929,6 +1007,7 @@ int ukl_getitimer(int which, struct itimerval * value){
 long ukl_sendmsg(int fd, struct user_msghdr* msg, unsigned int flags){
 	extern long __ukl_sendmsg(int fd, struct user_msghdr* msg, unsigned int flags);
         int retval;
+	//trace_printk("*** PID %d SYSCALL __ukl_sendmsg ***\n", current->pid);
         enter_ukl();
         retval = __ukl_sendmsg(fd, msg, flags);
         exit_ukl();
