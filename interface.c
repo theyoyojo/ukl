@@ -65,7 +65,7 @@ int interface(void)
     
      __libc_start_main((void *) kmain);
 
-    kmain();
+    //kmain();
     
     while(1){
         current->state = TASK_INTERRUPTIBLE;
