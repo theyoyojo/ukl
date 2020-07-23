@@ -23,6 +23,10 @@ void * tls;
 
 extern void __libc_setup_tls (unsigned long start, unsigned long tbss_start, unsigned long end);
 extern void __ctype_init (void);
+// extern void __init_array_start (int, char **, char **);
+// extern void __init_array_end (int, char **, char **);
+extern void (*__init_array_start []) (int, char **, char **);
+extern void (*__init_array_end []) (int, char **, char **);
 extern unsigned long get_gs_value(void);
 extern int fsbringup(void);
 extern void ukl_sync(void);
@@ -166,6 +170,8 @@ void setup_networking(void){
 
 int interface(void)
 {
+    printk("interface, init array start: %px\n", &__init_array_start);
+    printk("interface, init array end: %px\n", &__init_array_end);
     setup_mm();
     //setup_networking();
     lib_start_kmain();
@@ -177,7 +183,7 @@ int interface(void)
     //set_fs(MAKE_MM_SEG(0x7FFFFFFFF000));
 
     //tracing_on();
-
+    printk("interface, about to call kmain");
     kmain();
     
     //ukl_sync();
