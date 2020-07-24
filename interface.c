@@ -386,7 +386,6 @@ void set_flags_shit(void);
 void set_flags_shit(){
   struct task_struct *me = current;
 
-  /* #define PF_RANDOMIZE		0x00400000	/\* Randomize virtual address space *\/ */
   /* #define PF_KTHREAD		0x00200000	/\* I am a kernel thread *\/ */
   /* #define PF_NOFREEZE		0x00008000	/\* This thread should not be frozen *\/ */
 
@@ -414,16 +413,16 @@ void set_flags_shit(){
   // Enter program with: 0x20c100
   // ****************************
 
+  // Disable randomize
+  /* #define PF_RANDOMIZE		0x00400000	/\* Randomize virtual address space *\/ */
+  me->flags &= ~PF_RANDOMIZE;
 
-  me->flags = me->flags^PF_RANDOMIZE;
-  me->flags = me->flags^PF_KTHREAD;
-  me->flags = me->flags^PF_NOFREEZE;
+  // Set fork no exec, it's a lie, but in keeping with how things were done.
+  /* #define PF_FORKNOEXEC		0x00000040	/\* Forked but didn't exec *\/ */
+  me->flags |= PF_RANDOMIZE;
 
-  printk("Current task struct flags = %x\n", me->flags);
-  printk("Current task struct address = %lx\n", me);
-  printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
+
   me->thread_info.flags = 0;
-  printk("Old task struct thread_info flags = %x\n", me->thread_info.flags);
 }
 
 extern void _start(void);
@@ -433,26 +432,9 @@ int interface(void)
 {
   printk("Running interface!!\n");
 
-#ifdef UKL_INT_PATH
-    setup_mm(); // some kernel init
-    setup_networking();
-    lib_start_kmain(); // some user init
-    fsbringup();
-    printk("Done interface setup\n");
-    printk("current->flags is %x\n", current->flags); // current->flags is 4140
-    kmain();
-#else
-    setup_networking();
-    /* set_flags_shit(); */
-    fsbringup();
-    /* printk("Done interface setup\n"); */
-    /* printk("current->flags is %x\n", current->flags); // 404100 */
-#endif
+  setup_networking();
+  /* set_flags_shit(); */
+  fsbringup();
 
-    /* while(1){ */
-    /*     current->state = TASK_INTERRUPTIBLE; */
-    /*     schedule(); */
-    /*    } */
-
-   return 0;
+  return 0;
 }
