@@ -45,6 +45,12 @@ gettimecheck: glibc
 # 	rm -rf ../linux/vmlinux 
 # 	make -C ../linux -j$(shell nproc)
 
+CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o
+CRT_ENDS= $(GLIBC_CRT_PATH)/crtn.o $(LIBGCC_PATH)/crtend.o
+
+GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
+GLIBC_LIBS= $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a $(MATH_PATH)/libm.a libc.a 
+MY_LD_FLAGS= --unresolved-symbols=ignore-all --allow-multiple-definition --defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
@@ -53,15 +59,14 @@ lebench: glibc
 # you can remove the init minimal line. The unresolved symbols flag shouldn't
 # do anything because it's a partial link.
 	ld -r -o lebenchfinal.o \
-	--defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal \
-	--unresolved-symbols=ignore-all \
-	--allow-multiple-definition \
-	/usr/lib64/crt1.o /usr/lib64/crti.o \
+	$(MY_LD_FLAGS) \
+	$(CRT_STARTS) \
 	lebench.o \
 	--start-group glibcfinal --end-group \
-	/usr/lib64/crtn.o
+	$(CRT_ENDS)
 
 	ar cr UKL.a ukl.o interface.o lebenchfinal.o
+
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
 	rm -rf ../linux/vmlinux
 	make -C ../linux -j$(shell nproc)
@@ -179,9 +184,47 @@ userstack:
 ufutex:
 	gcc -o ufutex ufutex.c -lpthread -ggdb --static
 
-CCON_PATH=/root/MPC-UKL/C-Constructor/
+PERF_PATH=/root/perf/tools/perf/
+PERF_LIB_PATH=/root/perf/tools/lib
+BENCH_PATH=/root/perf/tools/perf/work/
+MATH_PATH=/root/unikernel/build-glibc/glibc-build/math/
 LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
-GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
+
+
+
+PERF_OBJS= b-p.o $(PERF_PATH)/perf-in.o $(PERF_PATH)/pmu-events/pmu-events-in.o
+
+PERF_LIBS= $(PERF_LIB_PATH)/api/libapi.a $(PERF_LIB_PATH)/traceevent/libtraceevent.a $(PERF_LIB_PATH)/subcmd/libsubcmd.a $(PERF_LIB_PATH)/perf/libperf.a 
+
+UKL_OBJS= fsbringup.o ukl.o interface.o
+
+
+
+
+benchmark-perf: glibc
+# Build perf with mcmodel=kernel and no-red-zone
+	rm -rf b-p.o b-pfinal.o
+	gcc $(BENCH_PATH)/benchmark-perf.c -Dprintf=printk -c -o b-p.o -mcmodel=kernel -ggdb -mno-red-zone
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux M=$(PWD)
+
+	ld -r -o b-pfinal.o $(MY_LD_FLAGS) $(CRT_STARTS) $(PERF_OBJS) $(UKL_OBJS) --start-group $(PERF_LIBS) $(GLIBC_LIBS) --end-group $(CRT_ENDS)
+
+# --whole-archive $(PERF_LIB_PATH)/api/libapi.a $(PERF_LIB_PATH)/traceevent/libtraceevent.a $(PERF_LIB_PATH)/subcmd/libsubcmd.a $(PERF_LIB_PATH)/perf/libperf.a --no-whole-archive \
+# ukl.a down to 115 from 297
+# 227 with separate 297 with glibcfinal
+	ar cr UKL.a b-pfinal.o
+# ar cr UKL.a ukl.o interface.o b-pfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j$(shell nproc)
+# libc.a libpthread.a --end-group \
+# glibcfinal --end-group \
+#				\
+# glibcfinal
+#$(LIBGCC_PATH)/crtend.o $(LIBGCC_PATH)/crtbegin.o 
+	# ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive fsbringup.o libc.a libpthread.a --no-whole-archive
+
+CCON_PATH=/root/MPC-UKL/C-Constructor/
 cpp: glibc
 	rm -rf cons.o cpptestfinal.o
 	gcc $(CCON_PATH)/cons.c -c -o cons.o -mcmodel=kernel -ggdb -mno-red-zone
@@ -199,6 +242,18 @@ cpp: glibc
 	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j$(shell nproc)
 
 
+# lebench: glibc
+# 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
+# 	make -C ../linux M=$(PWD)
+
+# 	ld -r -o lebenchfinal.o \
+# 	$(MY_LD_FLAGS) $(CRT_STARTS) lebench.o $(UKL_OBJS) \
+# 	--start-group $(GLIBC_LIBS) --end-group $(CRT_ENDS)
+
+# 	ar cr UKL.a lebenchfinal.o
+# 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
+# 	rm -rf ../linux/vmlinux
+# 	make -C ../linux -j$(shell nproc)
 
 singlethreaded-tcp-server: glibc
 	gcc tcpsingle.c -c -o tcpsingle.o -mcmodel=kernel -ggdb

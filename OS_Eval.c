@@ -1184,7 +1184,7 @@ int copytestfile(void){
 int lmain(void)
 {
 	// home = getenv("LEBENCH_DIR");
-	
+	printf("Top of main\n");
 	output_fn = (char *)malloc(500*sizeof(char));
 	strcpy(output_fn, home);
 	strcat(output_fn, OUTPUT_FN);
@@ -1516,7 +1516,7 @@ int kmain(){
 #else
   int main(int argc, char *argv[], char * envp[]){
 #endif
- 
+    printf("Top of main\n");
     memset(test_point_arr, 0, sizeof(struct test_point) * NUM_TESTS);
     BASE_ITER = 5000;
 
@@ -1538,6 +1538,8 @@ int kmain(){
 #endif
 
   pthread_t thk;
+
+  printf("About to attempt pthread create\n");
   if (pthread_create (&thk, NULL, lmain, NULL) != 0)
     {
       printf("testmain create failed");
