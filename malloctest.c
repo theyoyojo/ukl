@@ -35,13 +35,16 @@ extern int printk(const char *fmt, ...);
 static void *
 benchmark_thread (int thn)
 {
-        char *addr = (char *)ukl_mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	char c = thn + '0';
-	*addr = c;
-
-        char a = *((char *)addr);
-
-        printf("addr = 0x%lx and data =  %c\n", addr, a);
+	int i = 0;
+	for(i = 0; i < 1000; i++){
+        char *addr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+		if (addr > 0){
+			char c = thn + '0';
+			*addr = c;
+	        	char a = *((char *)addr);
+        		printf("Thread = %d run = %d addr = 0x%lx and data =  %c\n",thn, i, addr, a);
+		}
+	}
         return;
 }
 
@@ -64,7 +67,7 @@ do_benchmark ()
 }
 
 int
-kmain ()
+main ()
 {
   do_benchmark ();
 

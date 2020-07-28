@@ -5,9 +5,8 @@ obj-y += interface.o
 
 glibc:
 	./extractglibc.sh
-	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
 	rm -rf UKL.a
-	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive fsbringup.o libc.a libpthread.a --no-whole-archive
+	ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive crti.o libc.a libpthread.a start.o crtn.o --no-whole-archive
 
 fstest: glibc
 	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
