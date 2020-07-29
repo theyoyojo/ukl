@@ -49,23 +49,31 @@ CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crt
 CRT_ENDS= $(GLIBC_CRT_PATH)/crtn.o $(LIBGCC_PATH)/crtend.o
 
 GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
-GLIBC_LIBS= $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a $(MATH_PATH)/libm.a libc.a 
+GLIBC_LIBS= $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a $(MATH_PATH)/libm.a libc.a libpthread.a 
 MY_LD_FLAGS= --unresolved-symbols=ignore-all --allow-multiple-definition --defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal
+
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
-
 # If you link libpthread as a .a as opposed to using the glibcfinal way
 # you can remove the init minimal line. The unresolved symbols flag shouldn't
 # do anything because it's a partial link.
 	ld -r -o lebenchfinal.o \
 	$(MY_LD_FLAGS) \
 	$(CRT_STARTS) \
-	lebench.o \
-	--start-group glibcfinal --end-group \
+	lebench.o ukl.o interface.o fsbringup.o \
+	--whole-archive $(GLIBC_LIBS) --no-whole-archive \
 	$(CRT_ENDS)
 
-	ar cr UKL.a ukl.o interface.o lebenchfinal.o
+	# --start-group $(GLIBC_LIBS) --end-group \
+	# echo This many unresolved syms
+	# nm lebenchfinal.o -u | wc
+	# false
+
+	# --whole-archive $(GLIBC_LIBS) --no-whole-archive \
+	#--start-group $(GLIBC_LIBS)  --end-group \
+#--start-group glibcfinal --end-group 
+	ar cr UKL.a  lebenchfinal.o
 
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
 	rm -rf ../linux/vmlinux
@@ -190,16 +198,11 @@ BENCH_PATH=/root/perf/tools/perf/work/
 MATH_PATH=/root/unikernel/build-glibc/glibc-build/math/
 LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
 
-
-
 PERF_OBJS= b-p.o $(PERF_PATH)/perf-in.o $(PERF_PATH)/pmu-events/pmu-events-in.o
 
 PERF_LIBS= $(PERF_LIB_PATH)/api/libapi.a $(PERF_LIB_PATH)/traceevent/libtraceevent.a $(PERF_LIB_PATH)/subcmd/libsubcmd.a $(PERF_LIB_PATH)/perf/libperf.a 
 
 UKL_OBJS= fsbringup.o ukl.o interface.o
-
-
-
 
 benchmark-perf: glibc
 # Build perf with mcmodel=kernel and no-red-zone
@@ -207,22 +210,14 @@ benchmark-perf: glibc
 	gcc $(BENCH_PATH)/benchmark-perf.c -Dprintf=printk -c -o b-p.o -mcmodel=kernel -ggdb -mno-red-zone
 	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux M=$(PWD)
 
-	ld -r -o b-pfinal.o $(MY_LD_FLAGS) $(CRT_STARTS) $(PERF_OBJS) $(UKL_OBJS) --start-group $(PERF_LIBS) $(GLIBC_LIBS) --end-group $(CRT_ENDS)
+	# ld -r -o b-pfinal.o $(MY_LD_FLAGS) $(CRT_STARTS) $(PERF_OBJS) $(UKL_OBJS) --start-group $(PERF_LIBS) $(GLIBC_LIBS) --end-group $(CRT_ENDS)
+	ld -r -o b-pfinal.o $(MY_LD_FLAGS) $(CRT_STARTS) $(PERF_OBJS) $(UKL_OBJS) --whole-archive $(PERF_LIBS) $(GLIBC_LIBS) --no-whole-archive $(CRT_ENDS)
 
-# --whole-archive $(PERF_LIB_PATH)/api/libapi.a $(PERF_LIB_PATH)/traceevent/libtraceevent.a $(PERF_LIB_PATH)/subcmd/libsubcmd.a $(PERF_LIB_PATH)/perf/libperf.a --no-whole-archive \
-# ukl.a down to 115 from 297
-# 227 with separate 297 with glibcfinal
 	ar cr UKL.a b-pfinal.o
 # ar cr UKL.a ukl.o interface.o b-pfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j$(shell nproc)
-# libc.a libpthread.a --end-group \
-# glibcfinal --end-group \
-#				\
-# glibcfinal
-#$(LIBGCC_PATH)/crtend.o $(LIBGCC_PATH)/crtbegin.o 
-	# ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive fsbringup.o libc.a libpthread.a --no-whole-archive
 
 CCON_PATH=/root/MPC-UKL/C-Constructor/
 cpp: glibc
