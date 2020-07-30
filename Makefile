@@ -44,13 +44,14 @@ gettimecheck: glibc
 # 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 # 	rm -rf ../linux/vmlinux 
 # 	make -C ../linux -j$(shell nproc)
+LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
+GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
 
 CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o
 CRT_ENDS= $(GLIBC_CRT_PATH)/crtn.o $(LIBGCC_PATH)/crtend.o
-
-GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
 GLIBC_LIBS= $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a $(MATH_PATH)/libm.a libc.a 
 MY_LD_FLAGS= --unresolved-symbols=ignore-all --allow-multiple-definition --defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal
+
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
@@ -225,6 +226,7 @@ benchmark-perf: glibc
 	# ld -r -o glibcfinal --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive fsbringup.o libc.a libpthread.a --no-whole-archive
 
 CCON_PATH=/root/MPC-UKL/C-Constructor/
+
 cpp: glibc
 	rm -rf cons.o cpptestfinal.o
 	gcc $(CCON_PATH)/cons.c -c -o cons.o -mcmodel=kernel -ggdb -mno-red-zone
@@ -235,8 +237,31 @@ cpp: glibc
         cons.o \
         --start-group $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a glibcfinal --end-group \
         $(LIBGCC_PATH)/crtend.o $(GLIBC_CRT_PATH)/crtn.o 
-# 	ld -r -o cpptestfinal.o --defsym=__init_array_start=.init_array cpptestfinal1.o
 	ar cr UKL.a ukl.o interface.o cpptestfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	rm -rf ../linux/vmlinux 
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j$(shell nproc)
+
+
+# Removed below: 	gcc $(CCON_PATH)/cons.c -c -o cons.o -mcmodel=kernel -ggdb -mno-red-zone
+CPP_PATH=/root/MPC-UKL/hello_c++
+CPPHELP_PATH=/root/MPC-UKL/C-Constructor/helpers
+
+hello.o: hello.cpp
+	gcc -c -o $@ $^ -ggdb
+	ld -r -o hello_final.o hello.o --whole-archive /usr/lib/gcc/x86_64-linux-gnu/8/libstdc++.a --no-whole-archive #--start-group /usr/lib/gcc/x86_64-linux-gnu/8/../../../x86_64-linux-gnu/libc.a  /usr/lib/gcc/x86_64-linux-gnu/8/libgcc.a /usr/lib/gcc/x86_64-linux-gnu/8/libgcc_eh.a --end-group
+
+
+hellocpp: glibc
+	rm -rf hellocppfinal.o
+	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux M=$(PWD)
+	ld -r -o hellocppfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition \
+		--defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal \
+        $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o \
+        $(CPP_PATH)/hello_final.o \
+        --start-group $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a $(CPPHELP_PATH)/libstdc++fs.a $(CPPHELP_PATH)/libsupc++.a glibcfinal --end-group \
+        $(LIBGCC_PATH)/crtend.o $(GLIBC_CRT_PATH)/crtn.o 
+	ar cr UKL.a ukl.o interface.o hellocppfinal.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	time KBUILD_BUILD_TIMESTAMP='' CC="ccache gcc" make -C ../linux -j$(shell nproc)
