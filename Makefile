@@ -1,5 +1,3 @@
-obj-y += interface.o
-
 
 .PHONY: glibc cj utb4 barriercheck client
 
@@ -45,10 +43,8 @@ lebench: glibc
 
 malloctest: glibc
 	gcc -c -o malloctest.o malloctest.c -mcmodel=kernel -ggdb -mno-red-zone
-	make -C ../linux M=$(PWD)
 	ld -r -o malloctestfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition malloctest.o --start-group glibcfinal --end-group 
-	ar cr UKL.a interface.o malloctestfinal.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	ar cr UKL.a malloctestfinal.o
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
