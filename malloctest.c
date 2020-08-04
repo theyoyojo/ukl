@@ -29,20 +29,21 @@
 #include <stdbool.h>
 #include <sys/mman.h>
 
-extern int printk(const char *fmt, ...);
-#define printf printk
+//extern int printk(const char *fmt, ...);
+//#define printf printk
 
 static void *
 benchmark_thread (int thn)
 {
 	int i = 0;
-	for(i = 0; i < 1000; i++){
+	for(i = 0; i < 20; i++){
         char *addr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 		if (addr > 0){
 			char c = thn + '0';
 			*addr = c;
 	        	char a = *((char *)addr);
         		printf("Thread = %d run = %d addr = 0x%lx and data =  %c\n",thn, i, addr, a);
+			sleep(0.1);
 		}
 	}
         return;
@@ -51,7 +52,7 @@ benchmark_thread (int thn)
 static void
 do_benchmark ()
 {
-      int num_threads = 5;
+      int num_threads = 20;
 
       pthread_t threads[num_threads];
 

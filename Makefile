@@ -1,7 +1,7 @@
 obj-y += interface.o
 
 
-.PHONY: glibc cj utb4 barriercheck
+.PHONY: glibc cj utb4 barriercheck client
 
 glibc:
 	./extractglibc.sh
@@ -37,10 +37,9 @@ gettimecheck: glibc
 
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
-	make -C ../linux M=$(PWD)
-	ld -r -o lebenchfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition lebench.o --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o interface.o lebenchfinal.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	gcc -c -o fsb.o fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
+	ld -r -o lebenchfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition lebench.o --start-group fsb.o glibcfinal --end-group 
+	ar cr UKL.a lebenchfinal.o
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
@@ -72,15 +71,9 @@ signaltest: glibc
 	make -C ../linux -j$(shell nproc)
 
 test: glibc
-	rm -rf tst*
-	cp ../build-glibc/glibc/nptl/${case}.c .
 	gcc -c -o ${case}.o ${case}.c -mcmodel=kernel -ggdb -Wno-implicit
-	gcc -c -o testingmain.o testingmain.c -mcmodel=kernel -ggdb -Wno-implicit
-	ld -r -o test.o testingmain.o ${case}.o
-	make -C ../linux M=$(PWD)
-	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o test.o --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o testfinal.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o ${case}.o --start-group glibcfinal --end-group 
+	ar cr UKL.a testfinal.o
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
@@ -131,19 +124,16 @@ memcached: glibc
 	rm -f UKLlibevent
 	cp ../memcached/UKLmemcached .
 	cp ../libevent/UKLlibevent .
-	make -C ../linux M=$(PWD)
-	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition UKLmemcached --start-group glibcfinal UKLlibevent --end-group 
-	ar cr UKL.a ukl.o interface.o memcachedfinal.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive UKLmemcached --start-group glibcfinal UKLlibevent --end-group --no-whole-archive
+	ar cr UKL.a memcachedfinal.o
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 	#make -C ../linux -j$(shell nproc)
 
 multithreaded-tcp-server: glibc
 	gcc multithreadedserver.c -c -o multithreadedserver.o -mcmodel=kernel -ggdb
-	make -C ../linux M=$(PWD)
-	ld -r -o multcp.o --unresolved-symbols=ignore-all --allow-multiple-definition multithreadedserver.o --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o interface.o multcp.o
+	ld -r -o multcp.o --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive multithreadedserver.o --start-group glibcfinal --end-group --no-whole-archive
+	ar cr UKL.a multcp.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
@@ -158,7 +148,7 @@ multithreaded-printing: glibc
 	make -C ../linux -j$(shell nproc)
 
 client:
-	gcc -o client client.c -lpthread -ggdb --static
+	gcc -o client client.c -lpthread -ggdb
 
 userstack:
 	gcc -o userstack userstack.c rspcheck.S -lpthread -ggdb --static
