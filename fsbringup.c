@@ -8,19 +8,25 @@
 #include <stdlib.h>
 #include <dirent.h>
 
-extern long ukl_mkdir(const char *pathname, mode_t mode);
-extern int ukl_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data);
-extern void ukl_sync(void);
 extern int printk(const char *fmt, ...);
 
-int fsbringup(void){
+int main(void){
 
 	// Building and Mounting tmpfs
 
-	ukl_mkdir ("/mytmpfs", 0777);
-	ukl_mkdir ("/root", 0777);
+	if( mkdir ("/mytmpfs", 0777)== -1){
+		printk("mkdir: /mytmpfs fail");
+	} else {
+		printk("mkdir /mytmpfs successful!\n");
+	}
+	
+	if( mkdir ("/root", 0777)== -1){
+		printk("mkdir: /root fail");
+	} else {
+		printk("mkdir /root successful!\n");
+	}
 
-	if(ukl_mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){
+	if(mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){
 		printk("mount: /mytmpfs fail");
 	} else {
 		printk("mount /mytmpfs successful!\n");
@@ -35,12 +41,12 @@ int fsbringup(void){
 	}
 	
 
-	if (ukl_mount ("/dev/root", "/root", "ext2", MS_NOATIME, "") == -1) {
+	if (mount ("/dev/root", "/root", "ext2", MS_NOATIME, "") == -1) {
 		printk("mount: /root");
 	} else {
 		printk("mount successful!\n");
 	}
-/*
+
 	// Copying files from /dev/root/ukl to tmpfs
 	
 	FILE *fptr;
@@ -84,9 +90,7 @@ int fsbringup(void){
 	fclose(source);
 	fclose(target);
 	
-	ukl_sync();
-*/
+	sync();
 	return 0;
-	
 }
 

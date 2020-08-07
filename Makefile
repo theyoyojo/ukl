@@ -8,10 +8,8 @@ glibc:
 
 fstest: glibc
 	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
-	make -C ../linux M=$(PWD)
 	ld -r -o fsfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition fsbringup.o --start-group glibcfinal --end-group 
-	ar cr UKL.a ukl.o interface.o fsfinal.o
-	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
+	ar cr UKL.a fsfinal.o
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
