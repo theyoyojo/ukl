@@ -1,5 +1,7 @@
+obj-y += interface.o
 
-.PHONY: glibc cj utb4 barriercheck client
+
+.PHONY: glibc cj utb4 barriercheck
 
 glibc:
 	./extractglibc.sh
@@ -8,8 +10,10 @@ glibc:
 
 fstest: glibc
 	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
+	make -C ../linux M=$(PWD)
 	ld -r -o fsfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition fsbringup.o --start-group glibcfinal --end-group 
-	ar cr UKL.a fsfinal.o
+	ar cr UKL.a ukl.o interface.o fsfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
@@ -31,18 +35,71 @@ gettimecheck: glibc
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
-lebench: glibc
-	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
-	gcc -c -o fsb.o fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
-	ld -r -o lebenchfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition lebench.o --start-group fsb.o glibcfinal --end-group 
-	ar cr UKL.a lebenchfinal.o
-	rm -rf ../linux/vmlinux 
-	make -C ../linux -j$(shell nproc)
+LEB_DIR =./lebench/
+lebench_app:
+# Remove this once you figure it out.
+	gcc -c -o fsbringup.o fsbringup.c -mcmodel=kernel -ggdb
+# Remove all old state
+	make -C lebench clean
+
+# Build lebench app lib
+	make -C lebench
+
+# Linux link script expects to find UKL.a here.
+	cp $(LEB_DIR)/lebench_partial.o ./UKL.a
+
+# Force rebuild of vmlinux, pulls in UKL.a in link script
+	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
+
+# Copy vmlinux and compressed linux into dir for later inspection.
+	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
+	cp ../linux/arch/x86/boot/bzImage $(LEB_DIR)/finished_linux_files
+	cp ../linux/System.map $(LEB_DIR)/finished_linux_files
+
+PERF_DIR =perf
+perf_app: perf
+# Remove all old state
+	make -C $< clean
+
+# Build lebench app lib
+	make -C $<
+
+# Linux link script expects to find UKL.a here.
+	cp $(PERF_DIR)/perf_partial.o ./UKL.a
+
+# Force rebuild of vmlinux, pulls in UKL.a in link script
+	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
+
+# Copy vmlinux and compressed linux into dir for later inspection.
+	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
+	cp ../linux/arch/x86/boot/bzImage $(PERF_DIR)/finished_linux_files
+	cp ../linux/System.map $(PERF_DIR)/finished_linux_files
+
+PRINT_DIR =printDirs
+printDir_app: printDirs
+# Remove all old state
+	make -C $< clean
+
+# Build lebench app lib
+	make -C $<
+
+# Linux link script expects to find UKL.a here.
+	cp $(PRINT_DIR)/partial.o ./UKL.a
+
+# Force rebuild of vmlinux, pulls in UKL.a in link script
+	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
+
+# Copy vmlinux and compressed linux into dir for later inspection.
+	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
+	cp ../linux/arch/x86/boot/bzImage $(PRINT_DIR)/finished_linux_files
+	cp ../linux/System.map $(PRINT_DIR)/finished_linux_files
 
 malloctest: glibc
 	gcc -c -o malloctest.o malloctest.c -mcmodel=kernel -ggdb -mno-red-zone
+	make -C ../linux M=$(PWD)
 	ld -r -o malloctestfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition malloctest.o --start-group glibcfinal --end-group 
-	ar cr UKL.a malloctestfinal.o
+	ar cr UKL.a interface.o malloctestfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
@@ -65,9 +122,15 @@ signaltest: glibc
 	make -C ../linux -j$(shell nproc)
 
 test: glibc
+	rm -rf tst*
+	cp ../build-glibc/glibc/nptl/${case}.c .
 	gcc -c -o ${case}.o ${case}.c -mcmodel=kernel -ggdb -Wno-implicit
-	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o ${case}.o --start-group glibcfinal --end-group 
-	ar cr UKL.a testfinal.o
+	gcc -c -o testingmain.o testingmain.c -mcmodel=kernel -ggdb -Wno-implicit
+	ld -r -o test.o testingmain.o ${case}.o
+	make -C ../linux M=$(PWD)
+	ld -r -o testfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition interface.o test.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o testfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 
@@ -112,22 +175,25 @@ uklfutex: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
-	
+
 memcached: glibc
 	rm -f UKLmemcached
 	rm -f UKLlibevent
 	cp ../memcached/UKLmemcached .
 	cp ../libevent/UKLlibevent .
-	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive UKLmemcached --start-group glibcfinal UKLlibevent --end-group --no-whole-archive
-	ar cr UKL.a memcachedfinal.o
+	make -C ../linux M=$(PWD)
+	ld -r -o memcachedfinal.o --unresolved-symbols=ignore-all --allow-multiple-definition UKLmemcached --start-group glibcfinal UKLlibevent --end-group 
+	ar cr UKL.a ukl.o interface.o memcachedfinal.o
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
 	#make -C ../linux -j$(shell nproc)
 
 multithreaded-tcp-server: glibc
 	gcc multithreadedserver.c -c -o multithreadedserver.o -mcmodel=kernel -ggdb
-	ld -r -o multcp.o --unresolved-symbols=ignore-all --allow-multiple-definition --whole-archive multithreadedserver.o --start-group glibcfinal --end-group --no-whole-archive
-	ar cr UKL.a multcp.o
+	make -C ../linux M=$(PWD)
+	ld -r -o multcp.o --unresolved-symbols=ignore-all --allow-multiple-definition multithreadedserver.o --start-group glibcfinal --end-group 
+	ar cr UKL.a ukl.o interface.o multcp.o
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
@@ -142,7 +208,7 @@ multithreaded-printing: glibc
 	make -C ../linux -j$(shell nproc)
 
 client:
-	gcc -o client client.c -lpthread -ggdb
+	gcc -o client client.c -lpthread -ggdb --static
 
 userstack:
 	gcc -o userstack userstack.c rspcheck.S -lpthread -ggdb --static
