@@ -58,7 +58,7 @@ partial.o: printDirs.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
 	gcc -Dprintf=printk -c -o $@ $< -mcmodel=kernel -ggdb -mno-red-zone
 
 tuFS.ext2:
-	fallocate -l 1M emptyFile
+	fallocate -l 10M emptyFile
 	mkfs.ext2 emptyFile
 	mv emptyFile $@
 	mkdir mt

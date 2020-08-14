@@ -75,6 +75,8 @@ perf_app: perf
 	cp ../linux/arch/x86/boot/bzImage $(PERF_DIR)/finished_linux_files
 	cp ../linux/System.map $(PERF_DIR)/finished_linux_files
 
+
+
 PRINT_DIR =printDirs
 printDir_app: printDirs
 # Remove all old state
@@ -225,6 +227,10 @@ singlethreaded-tcp-server: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
+
+printDir_run:
+	# SMOptions='foo' make -C ../min-initrd runU
+	SMOptions='-initrd min-initrd.d/initrd -hda ../ukl/printDirs/tuFS.ext2' make -C ../min-initrd runU
 
 run:
 	make -C ../min-initrd runU
