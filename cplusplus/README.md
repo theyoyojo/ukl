@@ -2,13 +2,13 @@
 ## UKL C++ And Other Demo Code
 
 ### Requirements
-1. Assumes you have built local **gcc/c++** libraries in folder **unikerelLinux/gcc-build-cpp**
-2. Assumes you have built local **glibc** libraries and files in folder **unikerelLinux/build-glibc**
+1. Assumes you have built local **gcc/c++** libraries in folder **unikerelLinux/gcc-install**
+2. Assumes you have built local **glibc** libraries and files in folder **unikerelLinux/build-glibc/glibc-build**
 3. Assumes you have build **Linux** from **ukl-main branch**
 
 ### C++, Constructor, Filesystem, and Argc/Environment Variable Apps
 
-The Makefile contains three apps to demonstrate the use of constructors (in both C and C++ code) and the C++ libraries.  
+The Makefile contains four apps to demonstrate the use of constructors (in both C and C++ code) and the C++ libraries.  
 
 | Makefile target | Description |
 | --- | --- |
