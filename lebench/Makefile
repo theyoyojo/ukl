@@ -1,20 +1,22 @@
 all: lebench_info
 # GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
-GLIBC_CRT_PATH=/root//unikernel/build-glibc/glibc-build/csu
+# GLIBC_CRT_PATH=/root//unikernel/build-glibc/glibc-build/csu
+GLIBC_CRT_PATH=../../build-glibc/glibc-build/csu/
 
 # Need to build on this machine.
-LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers
+# LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers
+LIBGCC_PATH=../../gcc-build-cpp/x86_64-pc-linux-gnu/libgcc/
 
 CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o
 
-CRT_ENDS= $(GLIBC_CRT_PATH)/crtn.o $(LIBGCC_PATH)/crtend.o
+CRT_ENDS=  $(LIBGCC_PATH)/crtend.o $(GLIBC_CRT_PATH)/crtn.o
 
-GLIBC_PATH=/root/unikernel/build-glibc/glibc-build
+# GLIBC_PATH=/root/unikernel/build-glibc/glibc-build
+GLIBC_PATH=../../build-glibc/glibc-build/
 
-GLIBC_LIBS= $(GLIBC_PATH)/libc.a $(GLIBC_PATH)/nptl/libpthread.a
-#$(LIBGCC_PATH)/libgcc.a #$(LIBGCC_PATH)/libgcc_eh.a
+GLIBC = $(GLIBC_PATH)/libc.a
 
-MY_LD_FLAGS= --unresolved-symbols=ignore-all --allow-multiple-definition --defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal
+MY_LD_FLAGS= --allow-multiple-definition --defsym=__pthread_initialize_minimal=__pthread_initialize_minimal_internal
 
 LD_DEBUG=--verbose -Map=lebench.map
 
@@ -36,15 +38,24 @@ UKL_MISC= ../fsbringup.o
 
 # This builds the partially linked app library that's ready to
 # be finally linked with the modified linux kernel.
-lebench_partial.o: lebench.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
+GCC_LIBS= $(LIBGCC_PATH)/libgcc.a $(LIBGCC_PATH)/libgcc_eh.a
+
+GLIBC_AUX_LIBS= $(GLIBC_PATH)/nptl/libpthread.a
+
+lebench_partial.o: lebench.o undefined_sys_hack.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
 # Build UKL lib
-	ld -r -o $@ $(MY_LD_FLAGS) $(CRT_STARTS) $< $(UKL_MISC) \
-		--whole-archive $(GLIBC_LIBS) --no-whole-archive \
-		$(CRT_ENDS) $(LOG_OUT)
+	gcc -c -o fsb.o ../fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
+	ld -r -o $@ $(MY_LD_FLAGS) $(CRT_STARTS) $< fsb.o  \
+		--whole-archive $(GLIBC) $(GLIBC_AUX_LIBS) --no-whole-archive \
+		--start-group $(GCC_LIBS) --end-group $(CRT_ENDS) $(LOG_OUT)
+	ar cr UKL.a lebench_partial.o undefined_sys_hack.o
+
+undefined_sys_hack.o: undefined_sys_hack.c
+	gcc -c -o $@ $< -mcmodel=kernel -ggdb -mno-red-zone
 
 lebench.o: lebench.c
 # Assemble the app Special flags for running in the kernel.
-	gcc -c -o lebench.o $< -mcmodel=kernel -ggdb -mno-red-zone
+	gcc -Dprintf=printk -c -o lebench.o $< -mcmodel=kernel -ggdb -mno-red-zone
 
 lebench_info: lebench_partial.o
 	nm $< > lebench_all_syms.txt
@@ -61,3 +72,4 @@ lebench_info: lebench_partial.o
 clean:
 	rm -rf info finished_linux_files
 	rm -rf lebench.o lebench_partial.o
+	rm -rf fsb.o lebench.map linker_verbose.txt

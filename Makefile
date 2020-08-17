@@ -46,7 +46,7 @@ lebench_app:
 	make -C lebench
 
 # Linux link script expects to find UKL.a here.
-	cp $(LEB_DIR)/lebench_partial.o ./UKL.a
+	cp $(LEB_DIR)/UKL.a ./UKL.a
 
 # Force rebuild of vmlinux, pulls in UKL.a in link script
 	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
@@ -65,7 +65,8 @@ perf_app: perf
 	make -C $<
 
 # Linux link script expects to find UKL.a here.
-	cp $(PERF_DIR)/perf_partial.o ./UKL.a
+# cp $(PERF_DIR)/perf_partial.o ./UKL.a
+	cp $(PERF_DIR)/UKL.a .
 
 # Force rebuild of vmlinux, pulls in UKL.a in link script
 	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
@@ -95,6 +96,29 @@ printDir_app: printDirs
 	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
 	cp ../linux/arch/x86/boot/bzImage $(PRINT_DIR)/finished_linux_files
 	cp ../linux/System.map $(PRINT_DIR)/finished_linux_files
+
+ASPRINTF_DIR =asprintf
+asprintf_app: $(ASPRINTF_DIR)
+# Remove all old state
+	make -C $< clean
+
+# Build lebench app lib
+	make -C $<
+
+# Linux link script expects to find UKL.a here.
+	cp $(ASPRINTF_DIR)/partial.o ./UKL.a
+
+# Force rebuild of vmlinux, pulls in UKL.a in link script
+	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
+
+# Copy vmlinux and compressed linux into dir for later inspection.
+	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
+	cp ../linux/arch/x86/boot/bzImage $(ASPRINTF_DIR)/finished_linux_files
+	cp ../linux/System.map $(ASPRINTF_DIR)/finished_linux_files
+
+asprintf_run:
+	# SMOptions='foo' make -C ../min-initrd runU
+	SMOptions='-initrd min-initrd.d/initrd -hda ../ukl/asprintf/tuFS.ext2' make -C ../min-initrd runU
 
 malloctest: glibc
 	gcc -c -o malloctest.o malloctest.c -mcmodel=kernel -ggdb -mno-red-zone
@@ -227,7 +251,8 @@ singlethreaded-tcp-server: glibc
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 	rm -rf ../linux/vmlinux 
 	make -C ../linux -j$(shell nproc)
-
+perf_run:
+	SMOptions='-initrd min-initrd.d/initrd -hda ../ukl/printDirs/tuFS.ext2' make -C ../min-initrd runU
 printDir_run:
 	# SMOptions='foo' make -C ../min-initrd runU
 	SMOptions='-initrd min-initrd.d/initrd -hda ../ukl/printDirs/tuFS.ext2' make -C ../min-initrd runU

@@ -1,0 +1,21 @@
+extern int printk(const char *fmt, ...);
+
+int unshare(){printk("function %s NYI\n", "unshare"); while(1);}
+int setns(){printk("function %s NYI\n", "setns"); while(1);}
+int name_to_handle_at(){printk("function %s NYI\n", "name_to_handle_at"); while(1);}
+int statfs64(){printk("function %s NYI\n", "statfs64"); while(1);}
+int __dlopen(){printk("function %s NYI\n", "__dlopen"); while(1);}
+int __dlclose(){printk("function %s NYI\n", "__dlclose"); while(1);}
+int __dlsym(){printk("function %s NYI\n", "__dlsym"); while(1);}
+int __dlvsym(){printk("function %s NYI\n", "__dlvsym"); while(1);}
+int __dlerror(){printk("function %s NYI\n", "__dlerror"); while(1);}
+int __dladdr(){printk("function %s NYI\n", "__dladdr"); while(1);}
+int __dladdr1(){printk("function %s NYI\n", "__dladdr1"); while(1);}
+int __dlinfo(){printk("function %s NYI\n", "__dlinfo"); while(1);}
+int __dlmopen(){printk("function %s NYI\n", "__dlmopen"); while(1);}
+int __libc_(){printk("function %s NYI\n", "__libc_"); while(1);}
+int __fstatfs64(){printk("function %s NYI\n", "__fstatfs64"); while(1);}
+int __fstatfs(){printk("function %s NYI\n", "__fstatfs"); while(1);}
+int __libc_register_dlfcn_hook(){printk("function %s NYI\n", "__libc_register_dlfcn_hook"); while(1);}
+int prctl(){printk("function %s NYI\n", "prctl"); while(1);}
+int __libc_memmove(){printk("function %s NYI\n", "__libc_memmove"); while(1);}

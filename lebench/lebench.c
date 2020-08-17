@@ -25,7 +25,6 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#define printf printk
 int BASE_ITER;
 
 #define NUM_TESTS 50
