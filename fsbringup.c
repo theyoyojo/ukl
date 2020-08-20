@@ -58,6 +58,19 @@ int fsbringup(void){
     } else {
       printk("mount /proc successful!\n");
     }
+
+  /* Mount proc fs */
+	if( mkdir ("/sys", 0755)== -1){
+		printk("mkdir: /sys fail");
+	} else {
+		printk("mkdir /sys successful!\n");
+	}
+    // Stolen from strace of mount proc /proc -t proc
+    if(mount("sysfs", "/sys", "sysfs", 0, NULL) == -1){
+      printk("mount: /sys fail");
+    } else {
+      printk("mount /sys successful!\n");
+    }
   /* while(1); */
 
   return 0;

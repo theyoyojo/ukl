@@ -3,7 +3,7 @@ GLIBC_CRT_PATH=../../build-glibc/glibc-build/csu/
 # Need to build on this machine.
 LIBGCC_PATH=../../gcc-build-cpp/x86_64-pc-linux-gnu/libgcc/
 
-CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o #$(LIBGCC_PATH)/crtbegin.o
+CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o
 
 CRT_ENDS= $(LIBGCC_PATH)/crtend.o $(GLIBC_CRT_PATH)/crtn.o
 
@@ -31,8 +31,8 @@ PERF_LIBS= $(PERF_LIB_PATH)/api/libapi.a $(PERF_LIB_PATH)/traceevent/libtraceeve
 
 # This builds the partially linked app library that's ready to
 # be finally linked with the modified linux kernel.
+# XXX glibc_libs isn't a thing want glibc and glibc_aux_libs
 perf_partial.o: perf.o undefined_sys_hack.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
-# Really unclear if this is needed
 	gcc -c -o fsb.o ../fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
 
 # This will be used as UKL.a

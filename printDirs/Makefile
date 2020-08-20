@@ -31,7 +31,7 @@ LOG_OUT= > linker_verbose.txt #2> (tee linker_err.txt >&2) #
 
 # This builds the partially linked app library that's ready to
 # be finally linked with the modified linux kernel.
-partial.o: printDirs.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
+partial.o: printDirs.o undefined_sys_hack.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
 # Really unclear if this is needed
 	gcc -c -o fsb.o ../fsbringup.c -mcmodel=kernel -ggdb -mno-red-zone
 
@@ -40,6 +40,7 @@ partial.o: printDirs.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
 		$< fsb.o \
 		--whole-archive $(GLIBC_AUX_LIBS) $(GLIBC) --no-whole-archive \
 		--start-group $(GCC_LIBS) --end-group $(CRT_ENDS) $(LOG_OUT)
+	ar cr UKL.a partial.o undefined_sys_hack.o
 
 # --start-group $(GLIBC_AUX_LIBS)  --end-group \
 # --start-group $(GCC_LIBS) $(GLIBC) --end-group $(CRT_ENDS) $(LOG_OUT)
@@ -52,6 +53,9 @@ partial.o: printDirs.o $(CRT_STARTS) $(CRT_ENDS) $(GLIBC_LIBS)
 # 	ld -r -o $@ $(MY_LD_FLAGS) $(CRT_STARTS) \
 # 		$< fsb.o $(PERF_OBJS) \
 # 		--whole-archive $(PERF_LIBS) $(GLIBC_LIBS) --no-whole-archive $(CRT_ENDS) $(LOG_OUT)
+
+undefined_sys_hack.o: undefined_sys_hack.c
+	gcc -c -o $@ $< -mcmodel=kernel -ggdb -mno-red-zone
 
 %.o: %.c
 # Assemble the app Special flags for running in the kernel.
@@ -80,4 +84,4 @@ info: partial.o
 
 clean:
 	rm -rf info finished_linux_files
-	rm -rf *.o out *.ext2 mt
+	rm -rf *.o out *.ext2 mt out.map linker_verbose.txt

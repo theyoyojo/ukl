@@ -87,7 +87,7 @@ printDir_app: printDirs
 	make -C $<
 
 # Linux link script expects to find UKL.a here.
-	cp $(PRINT_DIR)/partial.o ./UKL.a
+	cp $(PRINT_DIR)/UKL.a ./UKL.a
 
 # Force rebuild of vmlinux, pulls in UKL.a in link script
 	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
@@ -96,6 +96,25 @@ printDir_app: printDirs
 	# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
 	cp ../linux/arch/x86/boot/bzImage $(PRINT_DIR)/finished_linux_files
 	cp ../linux/System.map $(PRINT_DIR)/finished_linux_files
+
+PRINTF_DIR =printf
+printf_app: $(PRINTF_DIR)
+# Remove all old state
+	make -C $< clean
+
+# Build lebench app lib
+	make -C $<
+
+# Linux link script expects to find UKL.a here.
+	cp $(PRINTF_DIR)/UKL.a ./UKL.a
+
+# Force rebuild of vmlinux, pulls in UKL.a in link script
+	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
+
+# Copy vmlinux and compressed linux into dir for later inspection.
+# cp ../linux/vmlinux $(LEB_DIR)/finished_linux_files
+	cp ../linux/arch/x86/boot/bzImage $(PRINTF_DIR)/finished_linux_files
+	cp ../linux/System.map $(PRINTF_DIR)/finished_linux_files
 
 ASPRINTF_DIR =asprintf
 asprintf_app: $(ASPRINTF_DIR)
@@ -106,7 +125,7 @@ asprintf_app: $(ASPRINTF_DIR)
 	make -C $<
 
 # Linux link script expects to find UKL.a here.
-	cp $(ASPRINTF_DIR)/partial.o ./UKL.a
+	cp $(ASPRINTF_DIR)/UKL.a ./UKL.a
 
 # Force rebuild of vmlinux, pulls in UKL.a in link script
 	rm -rf ../linux/vmlinux && make -C ../linux -j$(shell nproc)
