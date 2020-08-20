@@ -28,7 +28,7 @@
 
 int counter=3;
 bool  isFirstIteration = false;
-const char *home = "/root/";
+const char *home;
 char *output_fn = NULL;
 char *new_output_fn = NULL;
 #define setup 		(struct timespec *fp) \
@@ -56,24 +56,10 @@ char *new_output_fn = NULL;
 #define OUTPUT_FILE_PATH	""
 #define OUTPUT_FN		OUTPUT_FILE_PATH "output_file.csv"
 #define NEW_OUTPUT_FN	OUTPUT_FILE_PATH "new_output_file.csv"
-#define DEBUG true
-#define BASE_ITER 10000
+#define DEBUG false
+#define BASE_ITER 100
 
 #define PAGE_SIZE 4096
-
-extern int printk(const char *fmt, ...);
-#define printf printk
-
-extern pid_t ukl_getpid(void);
-extern ssize_t ukl_read(int fd, const void* buf, size_t count);
-extern ssize_t ukl_write(int fd, const void* buf, size_t count);
-extern unsigned long ukl_mmap(unsigned long addr, unsigned long len, unsigned long prot, unsigned long flags, unsigned long fd, unsigned long off);
-extern int ukl_munmap(unsigned long addr, size_t len);
-extern int ukl_select(int n, fd_set  * inp, fd_set  * outp, fd_set  * exp, struct __kernel_old_timeval  * tvp);
-extern int ukl_poll(struct pollfd * ufds, unsigned int nfds, int timeout_msecs);
-extern int ukl_epoll_create(int size);
-extern int ukl_epoll_ctl(int epfd, int op, int fd, struct epoll_event* event);
-extern void ukl_sync(void);
 
 void add_diff_to_sum(struct timespec *result,struct timespec a, struct timespec b)
 {
@@ -218,7 +204,7 @@ struct timespec *calc_k_closest(struct timespec *timeArray, int size)
 		} else {
 			double diff = curr->tv_nsec - prev->tv_nsec;
 			double ratioDiff = diff/(double)prev->tv_nsec;
-			if(DEBUG) printf("diff: %lu\n", ratioDiff);
+			if(DEBUG) printf("diff: %lf\n", ratioDiff);
 			if (ratioDiff > INPRECISION)
 			{	
 				j = 0;
@@ -243,8 +229,6 @@ struct timespec *calc_k_closest(struct timespec *timeArray, int size)
 
 }
 
-extern void dump_unreclaimable_slab(void);
-
 void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *info){
 	struct timespec testStart, testEnd;
 	clock_gettime(CLOCK_MONOTONIC,&testStart);
@@ -256,15 +240,10 @@ void one_line_test(FILE *fp, FILE *copy, void (*f)(struct timespec*), testInfo *
 
 	struct timespec* timeArray = (struct timespec *)malloc(sizeof(struct timespec) * runs);
 	for (int i=0; i < runs; i++) {
-		/*printf("test i = %d\n", i);
-		if(i == 662){
-			dump_unreclaimable_slab();
-		}*/
 		timeArray[i].tv_sec = 0;
 		timeArray[i].tv_nsec = 0;
 		(*f)(&timeArray[i]);
 	}
-	printf("test loop done\n");
 	struct timespec *sum = calc_sum2(timeArray, runs);
 	struct timespec *average = calc_average(sum, runs);  
 	struct timespec *kbest = calc_k_closest(timeArray, runs);	
@@ -519,11 +498,9 @@ void threadTest(struct timespec *childTime, struct timespec *parentTime)
 }
 
 void getpid_test(struct timespec *diffTime) {
-	int p;
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//syscall(SYS_getpid);
-	p = ukl_getpid();
+	syscall(SYS_getpid);
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
@@ -535,11 +512,10 @@ void read_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 	char *buf_in = (char *) malloc (sizeof(char) * file_size);
 
-	int fd =open("/mytmpfs/test_file.txt", O_RDONLY);
+	int fd =open("/root/test_file.txt", O_RDONLY);
 	if (fd < 0) printf("invalid fd in read: %d\n", fd);
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//syscall(SYS_read, fd, buf_in, file_size);
-	ukl_read(fd, buf_in, file_size);
+	syscall(SYS_read, fd, buf_in, file_size);
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	close(fd);
 	
@@ -556,21 +532,19 @@ void read_warmup() {
 		buf_out[i] = 'a';
 	}
 
-	int fd = open("/mytmpfs/test_file.txt", O_CREAT | O_WRONLY);
+	int fd = open("/root/test_file.txt", O_CREAT | O_WRONLY);
 	if (fd < 0) printf("invalid fd in write: %d\n", fd);
 
-	//syscall(SYS_write, fd, buf_out, file_size);
-	ukl_write(fd, buf_out, file_size);
+	syscall(SYS_write, fd, buf_out, file_size);
 	close(fd);	
 
 	char *buf_in = (char *) malloc (sizeof(char) * file_size);
 
-	fd =open("/mytmpfs/test_file.txt", O_RDONLY);
+	fd =open("/root/test_file.txt", O_RDONLY);
 	if (fd < 0) printf("invalid fd in read: %d\n", fd);
 	
-	for (int i = 0; i < 1000; i ++) {
-		//syscall(SYS_read, fd, buf_in, file_size);
-		ukl_read(fd, buf_in, file_size);
+	for (int i = 0; i < 1; i ++) {
+		syscall(SYS_read, fd, buf_in, file_size);
 	}
 	close(fd);
 
@@ -581,17 +555,16 @@ void read_warmup() {
 }
 void write_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
-	char *buf;
-	buf = (char *) malloc (sizeof(char) * file_size);
+
+	char *buf = (char *) malloc (sizeof(char) * file_size);
 	for (int i = 0; i < file_size; i++) {
 		buf[i] = 'a';
 	}
-	int fd = open("/mytmpfs/test_file.txt", O_CREAT | O_WRONLY);
+	int fd = open("/root/test_file.txt", O_CREAT | O_WRONLY);
 	if (fd < 0) printf("invalid fd in write: %d\n", fd);
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//syscall(SYS_write, fd, buf, file_size);
-	ukl_write(fd, buf, file_size);
+	syscall(SYS_write, fd, buf, file_size);
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
 	
 	close(fd);
@@ -605,17 +578,15 @@ void write_test(struct timespec *diffTime) {
 void mmap_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 
-	int fd =open("/mytmpfs/test_file.txt", O_RDONLY);
+	int fd =open("/root/test_file.txt", O_RDONLY);
 	if (fd < 0) printf("invalid fd%d\n", fd);
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	void *addr = ukl_mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
 	
-	//syscall(SYS_munmap, addr, file_size);
-        ukl_munmap(addr, file_size);
-	close(fd);
+	syscall(SYS_munmap, addr, file_size);
+        close(fd);
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
 }
@@ -623,20 +594,18 @@ void mmap_test(struct timespec *diffTime) {
 void page_fault_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 
-	int fd =open("/mytmpfs/test_file.txt", O_RDONLY);
+	int fd =open("/root/test_file.txt", O_RDONLY);
 	if (fd < 0) printf("invalid fd%d\n", fd);
 
-	//void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	void *addr = (void *)ukl_mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 	char a = *((char *)addr);
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
 	
 	printf("read: %c\n", a);
-	//syscall(SYS_munmap, addr, file_size);
-        ukl_munmap(addr, file_size);
-	close(fd);
+	syscall(SYS_munmap, addr, file_size);
+        close(fd);
 	add_diff_to_sum(diffTime, endTime, startTime);
 	return;
 }
@@ -669,16 +638,14 @@ void ref_test(struct timespec *diffTime) {
 void munmap_test(struct timespec *diffTime) {
 	struct timespec startTime, endTime;
 
-	int fd =open("/mytmpfs/test_file.txt", O_RDWR);
+	int fd =open("/root/test_file.txt", O_RDWR);
 	if (fd < 0) printf("invalid fd%d\n", fd);
-	//void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_WRITE, MAP_PRIVATE, fd, 0);
-	void *addr = (void *)ukl_mmap(NULL, file_size, PROT_WRITE, MAP_PRIVATE, fd, 0);
+	void *addr = (void *)syscall(SYS_mmap, NULL, file_size, PROT_WRITE, MAP_PRIVATE, fd, 0);
 	for (int i = 0; i < file_size; i++) {
 		((char *)addr)[i] = 'b';
 	}
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//syscall(SYS_munmap, addr, file_size);
-	ukl_munmap(addr, file_size);
+	syscall(SYS_munmap, addr, file_size);
 	clock_gettime(CLOCK_MONOTONIC,&endTime);
 	close(fd);
 	add_diff_to_sum(diffTime, endTime, startTime);
@@ -710,8 +677,7 @@ void select_test(struct timespec *diffTime) {
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//retval = syscall(SYS_select, maxFd + 1, &rfds, NULL, NULL, &tv);
-	retval = ukl_select(maxFd + 1, &rfds, NULL, NULL, &tv);
+	retval = syscall(SYS_select, maxFd + 1, &rfds, NULL, NULL, &tv);
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	add_diff_to_sum(diffTime, endTime, startTime);
 
@@ -758,8 +724,7 @@ void poll_test(struct timespec *diffTime) {
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	//retval = syscall(SYS_poll, pfds, fd_count, 0);
-	retval = ukl_poll(pfds, fd_count, 0);
+	retval = syscall(SYS_poll, pfds, fd_count, 0);
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	add_diff_to_sum(diffTime, endTime, startTime);
 
@@ -780,7 +745,7 @@ void epoll_test(struct timespec *diffTime) {
 
 	int fds[fd_count];
 
-	int epfd = ukl_epoll_create(fd_count);
+	int epfd = epoll_create(fd_count);
 
 	for (int i = 0; i < fd_count; i++) {
 		char name[10];
@@ -803,7 +768,7 @@ void epoll_test(struct timespec *diffTime) {
 		event.events = EPOLLIN;
 		event.data.fd = fd;
 
-		retval = ukl_epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
+		retval = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
 		if (retval == -1) {
 			printf("[error] epoll_ctl failed.\n");
 		}
@@ -841,6 +806,13 @@ void context_switch_test(struct timespec *diffTime) {
 	if (retval != 0) printf("[error] failed to open pipe2.\n");
 	
 	char w = 'a', r;
+	cpu_set_t cpuset;
+	int prio;
+
+	retval = sched_getaffinity(getpid(), sizeof(cpuset), &cpuset);
+	if (retval == -1) printf("[error] failed to get affinity.\n");
+	prio = getpriority(PRIO_PROCESS, 0);
+	if (prio == -1) printf("[error] failed to get priority.\n");
 	
 	int forkId = fork();
 	if (forkId > 0) { // is parent
@@ -899,7 +871,12 @@ void context_switch_test(struct timespec *diffTime) {
 	} else {
 		printf("[error] failed to fork.\n");
 	}
-	
+
+	retval = sched_setaffinity(getpid(), sizeof(cpuset), &cpuset);
+	if (retval == -1) printf("[error] failed to restore affinity.\n");
+	retval = setpriority(PRIO_PROCESS, 0, prio);
+	if (retval == -1) printf("[error] failed to restore priority.\n");
+
 	struct timespec sum;
 	sum.tv_sec = 0;
 	sum.tv_nsec = 0;
@@ -1127,40 +1104,13 @@ void recv_test(struct timespec *timeArray, int iter, int *i) {
 
 }
 
-int copytestfile(void){
-	FILE *fptr;
-        FILE *source, *target;
-        char ch;
+extern int fsbringup(void);
 
-        source = fopen("/mytmpfs/test_file.txt", "r");
-
-        if( source == NULL )
-        {
-           printf("source problem\n");
-           exit(EXIT_FAILURE);
-        }
-
-        target = fopen("/root/test_file.txt", "w");
-
-        if( target == NULL )
-        {
-           fclose(source);
-           printf("target problem\n");
-           exit(EXIT_FAILURE);
-        }
-
-        while( ( ch = fgetc(source) ) != EOF )
-           fputc(ch, target);
-
-        printf("File copied successfully.\n");
-
-        fclose(source);
-        fclose(target);
-}
-
-int lmain(void)
+int main(int argc, char *argv[])
 {
-	// home = getenv("LEBENCH_DIR");
+	fsbringup();
+
+	home = "/root";
 	
 	output_fn = (char *)malloc(500*sizeof(char));
 	strcpy(output_fn, home);
@@ -1172,11 +1122,9 @@ int lmain(void)
 
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
-	// if (argc != 3){printf("Invalid arguments, gave %d not 3",argc);return(0);}
-	// char *iteration = argv[1];
-	// char *str_os_name = argv[2];
-	char *iteration = "0";
-        char *str_os_name = "ukl";
+	if (argc != 3){printf("Invalid arguments, gave %d not 3",argc);return(0);}
+	char *iteration = argv[1];
+	char *str_os_name = argv[2];
 	FILE *fp;
 	FILE *copy = NULL;
 	fp=fopen(new_output_fn,"w");
@@ -1212,8 +1160,8 @@ int lmain(void)
 	/*****************************************/
 	/*               GETPID                  */
 	/*****************************************/
-	
-	sleep(1);
+
+	sleep(2);
 	/*
 	info.iter = BASE_ITER * 100;
 	info.name = "ref";
@@ -1228,6 +1176,7 @@ int lmain(void)
 	info.name = "getpid";
 	one_line_test(fp, copy, getpid_test, &info);
 	*/
+
 	
 	/*****************************************/
 	/*            CONTEXT SWITCH             */
@@ -1280,7 +1229,7 @@ int lmain(void)
 	info.name = "thr create";
 	two_line_test(fp, copy, threadTest, &info);
 
-	
+
 	int page_count = 6000;
 	void *pages[page_count];
 	for (int i = 0; i < page_count; i++) {
@@ -1314,16 +1263,16 @@ int lmain(void)
 	/*****************************************/
 	/*     WRITE & READ & MMAP & MUNMAP      */
 	/*****************************************/
+
+	/****** SMALL ******/
 	/*
-	// ****** SMALL ******
-	
 	file_size = PAGE_SIZE;	
 	printf("file size: %d.\n", file_size);
-	
+
 	info.iter = BASE_ITER * 10;
 	info.name = "small write";
 	one_line_test(fp, copy, write_test, &info);
-	
+      
 	info.iter = BASE_ITER * 10; 
 	info.name = "small read";
 	read_warmup();
@@ -1340,12 +1289,12 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "small page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
-	// ***** MID ******
-	
+	*/
+	/****** MID ******/
+	/*
 	file_size = PAGE_SIZE * 10;
 	printf("file size: %d.\n", file_size);
-	
+
 	info.iter = BASE_ITER * 10;
 	info.name = "mid write";
 	one_line_test(fp, copy, write_test, &info);
@@ -1354,7 +1303,7 @@ int lmain(void)
 	info.name = "mid read";
 	read_warmup();
 	one_line_test(fp, copy, read_test, &info);
-	
+
 	info.iter = BASE_ITER * 10;
 	info.name = "mid mmap";
 	one_line_test(fp, copy, mmap_test, &info);
@@ -1366,12 +1315,13 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "mid page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-	
-	// ***** BIG ******
-	
+	*/
+	/****** BIG ******/
 	file_size = PAGE_SIZE * 1000;	
+	read_warmup();
+	/*
 	printf("file size: %d.\n", file_size);
-	
+
 	info.iter = BASE_ITER / 2;
 	info.name = "big write";
 	one_line_test(fp, copy, write_test, &info);
@@ -1393,15 +1343,15 @@ int lmain(void)
 	info.name = "big page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
 	*/
-        // ***** HUGE ******
-	
+       /****** HUGE ******/
+	/*
 	file_size = PAGE_SIZE * 10000;	
 	printf("file size: %d.\n", file_size);
-	
+
 	info.iter = BASE_ITER / 4;
 	info.name = "huge write";
 	one_line_test(fp, copy, write_test, &info);
-	
+
 	info.iter = BASE_ITER;
 	info.name = "huge read";
 	one_line_test(fp, copy, read_test, &info);
@@ -1417,13 +1367,13 @@ int lmain(void)
 	info.iter = BASE_ITER * 5;
 	info.name = "huge page fault";
 	one_line_test(fp, copy, page_fault_test, &info);
-
+	*/
 	/*****************************************/
 	/*              WRITE & READ             */
 	/*****************************************/
+
+	/****** SMALL ******/
 	/*
-	// ***** SMALL ******
-	
 	fd_count = 10;
 
 	info.iter = BASE_ITER * 10;
@@ -1437,10 +1387,10 @@ int lmain(void)
 	info.iter = BASE_ITER * 10;
 	info.name = "epoll";
 	one_line_test(fp, copy, epoll_test, &info);
-	
+	*/
 
-	// ***** BIG ******
-	
+	/****** BIG ******/
+	/*
 	fd_count = 1000;
 
 	info.iter = BASE_ITER;
@@ -1473,18 +1423,5 @@ int lmain(void)
 	struct timespec *diffTime = calc_diff(&startTime, &endTime);
 	printf("Test took: %ld.%09ld seconds\n",diffTime->tv_sec, diffTime->tv_nsec); 
 	free(diffTime);
-	//copytestfile();
-	ukl_sync();
 	return(0);
-}
-
-int kmain(void){
-        pthread_t thk;
-        if (pthread_create (&thk, NULL, lmain, NULL) != 0)
-        {
-                printf("testmain create failed");
-                return 1;
-        }
-
-        return 0;
 }
