@@ -10,12 +10,13 @@
 
 extern int printk(const char *fmt, ...);
 
-int main(void){
+int fsbringup(void){
 
 	// Building and Mounting tmpfs
 
 	if( mkdir ("/mytmpfs", 0777)== -1){
 		printk("mkdir: /mytmpfs fail");
+		return -1;
 	} else {
 		printk("mkdir /mytmpfs successful!\n");
 	}
@@ -28,6 +29,7 @@ int main(void){
 
 	if(mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){
 		printk("mount: /mytmpfs fail");
+		return -1;
 	} else {
 		printk("mount /mytmpfs successful!\n");
 	}
@@ -36,6 +38,7 @@ int main(void){
 
 	if (mknod ("/dev/root", S_IFBLK|0700, makedev (8,0)) == -1) {
 		printk("mknod: /dev/root");
+		return -1;
 	} else {
 		printk("mknod successful!\n");
 	}
@@ -43,10 +46,11 @@ int main(void){
 
 	if (mount ("/dev/root", "/root", "ext2", MS_NOATIME, "") == -1) {
 		printk("mount: /root");
+		return -1;
 	} else {
 		printk("mount successful!\n");
 	}
-
+	/*
 	// Copying files from /dev/root/ukl to tmpfs
 	
 	FILE *fptr;
@@ -89,7 +93,7 @@ int main(void){
 
 	fclose(source);
 	fclose(target);
-	
+	*/
 	sync();
 	return 0;
 }
