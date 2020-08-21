@@ -13,18 +13,18 @@ extern int printk(const char *fmt, ...);
 int fsbringup(void){
 
 	// Building and Mounting tmpfs
-  // Make a directory in existing fs
-	/* if( mkdir ("/mytmpfs", 0777)== -1){ */
-	/* 	printk("mkdir: /mytmpfs fail"); */
-	/* } else { */
-	/* 	printk("mkdir /mytmpfs successful!\n"); */
-	/* } */
+  /* Make a directory in existing fs */
+	if( mkdir ("/mytmpfs", 0777)== -1){
+		printk("mkdir: /mytmpfs fail");
+	} else {
+		printk("mkdir /mytmpfs successful!\n");
+	}
 
-	/* if(mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){ */
-	/* 	printk("mount: /mytmpfs fail"); */
-	/* } else { */
-	/* 	printk("mount /mytmpfs successful!\n"); */
-	/* } */
+	if(mount("tmpfs", "/mytmpfs", "tmpfs", MS_MGC_VAL, "size=4g") == -1){
+		printk("mount: /mytmpfs fail");
+	} else {
+		printk("mount /mytmpfs successful!\n");
+	}
 
   // With just these 2, I see the dir made correctly
   // And the mount works.

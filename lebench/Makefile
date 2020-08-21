@@ -24,7 +24,7 @@ MY_LD_FLAGS+= $(LD_DEBUG)
 
 LOG_OUT= > linker_verbose.txt #2> (tee linker_err.txt >&2) #
 
-UKL_MISC= ../fsbringup.o
+# UKL_MISC= ../fsbringup.o
 
 # LINUX_LIBS=arch/x86/kernel/head_64.o arch/x86/kernel/head64.o arch/x86/kernel/ebda.o arch/x86/kernel/platform-quirks.o init/built-in.a usr/built-in.a arch/x86/built-in.a kernel/built-in.a certs/built-in.a mm/built-in.a fs/built-in.a ipc/built-in.a security/built-in.a crypto/built-in.a block/built-in.a lib/built-in.a arch/x86/lib/built-in.a lib/lib.a arch/x86/lib/lib.a drivers/built-in.a sound/built-in.a arch/x86/pci/built-in.a arch/x86/power/built-in.a arch/x86/video/built-in.a net/built-in.a virt/built-in.a
 

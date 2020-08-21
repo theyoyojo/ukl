@@ -1369,134 +1369,134 @@ int main(int argc, char *argv[])
 	info.name = "1 small_write";
 	one_line_test(fp, copy, write_test, &info);
       
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "5 small_read"; */
-	/* read_warmup(); */
-	/* one_line_test(fp, copy, read_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "5 small_read";
+	read_warmup();
+	one_line_test(fp, copy, read_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "9 small_mmap"; */
-	/* one_line_test(fp, copy, mmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "9 small_mmap";
+	one_line_test(fp, copy, mmap_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "13 small_munmap"; */
-	/* one_line_test(fp, copy, munmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "13 small_munmap";
+	one_line_test(fp, copy, munmap_test, &info);
 
-	/* info.iter = BASE_ITER * 5; */
-	/* info.name = "17 small_page_fault"; */
-	/* one_line_test(fp, copy, page_fault_test, &info); */
+	info.iter = BASE_ITER * 5;
+	info.name = "17 small_page_fault";
+	one_line_test(fp, copy, page_fault_test, &info);
 
 	/****** MID ******/
-	/* file_size = PAGE_SIZE * 10; */
-	/* printf("file size: %d.\n", file_size); */
+	file_size = PAGE_SIZE * 10;
+	printf("file size: %d.\n", file_size);
 
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "2 mid_write"; */
-	/* one_line_test(fp, copy, write_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "2 mid_write";
+	one_line_test(fp, copy, write_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "6 mid_read"; */
-	/* read_warmup(); */
-	/* one_line_test(fp, copy, read_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "6 mid_read";
+	read_warmup();
+	one_line_test(fp, copy, read_test, &info);
 
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "10 mid_mmap"; */
-	/* one_line_test(fp, copy, mmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "10 mid_mmap";
+	one_line_test(fp, copy, mmap_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "14 mid_munmap"; */
-	/* one_line_test(fp, copy, munmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "14 mid_munmap";
+	one_line_test(fp, copy, munmap_test, &info);
 
-	/* info.iter = BASE_ITER * 5; */
-	/* info.name = "18 mid_page_fault"; */
-	/* one_line_test(fp, copy, page_fault_test, &info); */
+	info.iter = BASE_ITER * 5;
+	info.name = "18 mid_page_fault";
+	one_line_test(fp, copy, page_fault_test, &info);
 
 	/****** BIG ******/
-	/* file_size = PAGE_SIZE * 1000; */
-	/* printf("file size: %d.\n", file_size); */
+	file_size = PAGE_SIZE * 1000;
+	printf("file size: %d.\n", file_size);
 
-	/* info.iter = BASE_ITER / 2; */
-	/* info.name = "3 big_write"; */
-	/* one_line_test(fp, copy, write_test, &info); */
+	info.iter = BASE_ITER / 2;
+	info.name = "3 big_write";
+	one_line_test(fp, copy, write_test, &info);
 	
-	/* info.iter = BASE_ITER; */
-	/* info.name = "7 big_read"; */
-	/* read_warmup(); */
-	/* one_line_test(fp, copy, read_test, &info); */
+	info.iter = BASE_ITER;
+	info.name = "7 big_read";
+	read_warmup();
+	one_line_test(fp, copy, read_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "11 big_mmap"; */
-	/* one_line_test(fp, copy, mmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "11 big_mmap";
+	one_line_test(fp, copy, mmap_test, &info);
 	
-	/* info.iter = BASE_ITER / 4; */
-	/* info.name = "15 big_munmap"; */
-	/* one_line_test(fp, copy, munmap_test, &info); */
+	info.iter = BASE_ITER / 4;
+	info.name = "15 big_munmap";
+	one_line_test(fp, copy, munmap_test, &info);
 	
-	/* info.iter = BASE_ITER * 5; */
-	/* info.name = "19 big_page_fault"; */
-	/* one_line_test(fp, copy, page_fault_test, &info); */
+	info.iter = BASE_ITER * 5;
+	info.name = "19 big_page_fault";
+	one_line_test(fp, copy, page_fault_test, &info);
 
        /****** HUGE ******/
-	/* file_size = PAGE_SIZE * 10000; */
-	/* printf("file size: %d.\n", file_size); */
+	file_size = PAGE_SIZE * 10000;
+	printf("file size: %d.\n", file_size);
 
-	/* info.iter = BASE_ITER / 4; */
-	/* info.name = "4 huge_write"; */
-	/* one_line_test(fp, copy, write_test, &info); */
+	info.iter = BASE_ITER / 4;
+	info.name = "4 huge_write";
+	one_line_test(fp, copy, write_test, &info);
 
-	/* info.iter = BASE_ITER; */
-	/* info.name = "8 huge_read"; */
-	/* one_line_test(fp, copy, read_test, &info); */
+	info.iter = BASE_ITER;
+	info.name = "8 huge_read";
+	one_line_test(fp, copy, read_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "12 huge_mmap"; */
-	/* one_line_test(fp, copy, mmap_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "12 huge_mmap";
+	one_line_test(fp, copy, mmap_test, &info);
 	
-	/* info.iter = BASE_ITER / 4; */
-	/* info.name = "16 huge_munmap"; */
-	/* one_line_test(fp, copy, munmap_test, &info); */
+	info.iter = BASE_ITER / 4;
+	info.name = "16 huge_munmap";
+	one_line_test(fp, copy, munmap_test, &info);
 
-	/* info.iter = BASE_ITER * 5; */
-	/* info.name = "20 huge_page_fault"; */
-	/* one_line_test(fp, copy, page_fault_test, &info); */
+	info.iter = BASE_ITER * 5;
+	info.name = "20 huge_page_fault";
+	one_line_test(fp, copy, page_fault_test, &info);
 
 	/*****************************************/
 	/*              WRITE & READ             */
 	/*****************************************/
 
 	/****** SMALL ******/
-	/* fd_count = 10; */
+	fd_count = 10;
 
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "21 small_select"; */
-	/* one_line_test(fp, copy, select_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "21 small_select";
+	one_line_test(fp, copy, select_test, &info);
 	
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "22 small_poll"; */
-	/* one_line_test(fp, copy, poll_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "22 small_poll";
+	one_line_test(fp, copy, poll_test, &info);
 		
-	/* info.iter = BASE_ITER * 10; */
-	/* info.name = "23 small_epoll"; */
-	/* one_line_test(fp, copy, epoll_test, &info); */
+	info.iter = BASE_ITER * 10;
+	info.name = "23 small_epoll";
+	one_line_test(fp, copy, epoll_test, &info);
 	
 
 	/****** BIG ******/
-	/* fd_count = 1000; */
+	fd_count = 1000;
 
-	/* info.iter = BASE_ITER; */
-	/* info.name = "24 big_select"; */
-	/* one_line_test(fp, copy, select_test, &info); */
+	info.iter = BASE_ITER;
+	info.name = "24 big_select";
+	one_line_test(fp, copy, select_test, &info);
 
-	/* info.iter = BASE_ITER; */
-	/* info.name = "25 big_poll"; */
-	/* one_line_test(fp, copy, poll_test, &info); */
+	info.iter = BASE_ITER;
+	info.name = "25 big_poll";
+	one_line_test(fp, copy, poll_test, &info);
 
-	/* info.iter = BASE_ITER; */
-	/* info.name = "26 big_epoll"; */
-	/* one_line_test(fp, copy, epoll_test, &info); */
+	info.iter = BASE_ITER;
+	info.name = "26 big_epoll";
+	one_line_test(fp, copy, epoll_test, &info);
 
-  printf("Dropping into spin loop\n");
-  while(1);
+  /* printf("Dropping into spin loop\n"); */
+  /* while(1); */
 
 	fclose(fp);
 	if (!isFirstIteration)
