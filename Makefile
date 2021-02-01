@@ -1,4 +1,4 @@
-obj-y += ukl.o interface.o
+# obj-y += ukl.o interface.o
 
 
 .PHONY: glibc cj utb4 barriercheck
@@ -44,8 +44,8 @@ gettimecheck: glibc
 # 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a 
 # 	rm -rf ../linux/vmlinux 
 # 	make -C ../linux -j$(shell nproc)
-LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
-GLIBC_CRT_PATH=/root/MPC-UKL/C-Constructor/helpers/
+# LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
+GLIBC_CRT_PATH=../build-glibc/glibc-build/csu/
 
 CRT_STARTS= $(GLIBC_CRT_PATH)/crt1.o $(GLIBC_CRT_PATH)/crti.o $(LIBGCC_PATH)/crtbegin.o
 CRT_ENDS= $(GLIBC_CRT_PATH)/crtn.o $(LIBGCC_PATH)/crtend.o
@@ -55,6 +55,7 @@ MY_LD_FLAGS= --unresolved-symbols=ignore-all --allow-multiple-definition --defsy
 lebench: glibc
 	gcc -c -o lebench.o OS_Eval.c -mcmodel=kernel -ggdb -mno-red-zone
 	make -C ../linux M=$(PWD)
+
 
 # If you link libpthread as a .a as opposed to using the glibcfinal way
 # you can remove the init minimal line. The unresolved symbols flag shouldn't
@@ -66,7 +67,23 @@ lebench: glibc
 	--start-group glibcfinal --end-group \
 	$(CRT_ENDS)
 
-	ar cr UKL.a ukl.o interface.o lebenchfinal.o
+	ar cr UKL.a lebenchfinal.o
+
+	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
+	rm -rf ../linux/vmlinux
+	make -C ../linux -j$(shell nproc)
+
+hello: glibc
+	gcc -c -o hello.o hello.c -mcmodel=kernel -ggdb -mno-red-zone
+	make -C ../linux M=$(PWD)
+	ld -r -o hellofinal.o \
+	$(MY_LD_FLAGS) \
+	$(CRT_STARTS) \
+	hello.o \
+	--start-group glibcfinal --end-group \
+	$(CRT_ENDS)
+
+	ar cr UKL.a hellofinal.o
 
 	rm -rf *.ko *.mod.* .H* .tm* .*cmd Module.symvers modules.order built-in.a
 	rm -rf ../linux/vmlinux
@@ -189,7 +206,7 @@ PERF_PATH=/root/perf/tools/perf/
 PERF_LIB_PATH=/root/perf/tools/lib
 BENCH_PATH=/root/perf/tools/perf/work/
 MATH_PATH=/root/unikernel/build-glibc/glibc-build/math/
-LIBGCC_PATH=/root/MPC-UKL/C-Constructor/helpers/
+LIBGCC_PATH=/root/unikernelLinux/gcc-build/gcc/
 
 
 

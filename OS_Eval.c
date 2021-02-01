@@ -91,11 +91,11 @@ extern void ukl_sync(void);
 
 extern void init_cacheinfo (void);  // ADDED MCB
 
-void __attribute__ ((constructor)) b_constructor() {
-  printf("%s\n", __FUNCTION__);
-  init_cacheinfo();
-  printf("init cacheinfo run\n");
-}
+/* void __attribute__ ((constructor)) b_constructor() { */
+/*   printf("%s\n", __FUNCTION__); */
+/*   init_cacheinfo(); */
+/*   printf("init cacheinfo run\n"); */
+/* } */
 
 void add_diff_to_sum(struct timespec *result,struct timespec a, struct timespec b)
 {
@@ -1545,14 +1545,18 @@ int kmain(){
   /*   printf("envp[%d]=%s\n",i, envp[i]); */
 #endif
 
-  pthread_t thk;
+	/* for(;;) { */
+	/* 	printf("Hello, world!\n") ; */
+	/* } */
 
-  printf("About to attempt pthread create\n");
-  if (pthread_create (&thk, NULL, lmain, NULL) != 0)
-    {
-      printf("testmain create failed");
-      return 1;
-    }
+  /* pthread_t thk; */
+
+  /* printf("About to attempt pthread create\n"); */
+  /* if (pthread_create (&thk, NULL, lmain, NULL) != 0) */
+  /*   { */
+  /*     printf("testmain create failed"); */
+  /*     return 1; */
+  /*   } */
 
   return 0;
 }
